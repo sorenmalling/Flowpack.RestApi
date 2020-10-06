@@ -5,10 +5,11 @@ use Flowpack\RestApi\Controller\AbstractRestController;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Flow\Core\Bootstrap;
-use Neos\Flow\Http\Response;
-use Neos\Flow\Log\SystemLoggerInterface;
+use Neos\Flow\Http\Component\SetHeaderComponent;
+use Neos\Flow\Log\PsrSystemLoggerInterface;
 use Neos\Flow\Mvc\ActionRequest;
 use Neos\Flow\Exception as FlowException;
+use Neos\Flow\Mvc\ActionResponse;
 
 /**
  * A flow AOP aspect that registers the JsonExceptionHandler if an RestController is targeted.
@@ -21,7 +22,7 @@ class ErrorHandlerAspect
 
 	/**
 	 * @Flow\Inject
-	 * @var SystemLoggerInterface
+	 * @var PsrSystemLoggerInterface
 	 */
 	protected $systemLogger;
 
@@ -51,7 +52,6 @@ class ErrorHandlerAspect
 
 		if (is_subclass_of($actionRequest->getControllerObjectName(), AbstractRestController::class)) {
 			$exceptionHandler = new JsonExceptionHandler();
-			$exceptionHandler->injectSystemLogger($this->systemLogger);
 
 			if ($this->bootstrap->getContext()->isTesting()) {
 				// In Testing context we need to manually catch exceptions and prepare a proper JSON response, because otherwise the
@@ -59,14 +59,13 @@ class ErrorHandlerAspect
 				try {
 					$joinPoint->getAdviceChain()->proceed($joinPoint);
 				} catch (\Exception $e) {
-					$this->systemLogger->log('Caught exception in Testing context while calling a RestController. Manually preparing JSON response.');
-					$this->systemLogger->logException($e);
-					/* @var $response Response */
+					$this->systemLogger->info('Caught exception in Testing context while calling a RestController. Manually preparing JSON response.');
+					/* @var $response ActionResponse */
 					$response = $joinPoint->getMethodArgument('response');
 					$statusCode = ($e instanceof FlowException) ? $e->getStatusCode() : 500;
 					$referenceCode = ($e instanceof FlowException) ? $e->getReferenceCode() : null;
-					$response->setStatus($statusCode);
-					$response->setHeader('Content-Type', 'application/json');
+					$response->setStatusCode($statusCode);
+					$response->setComponentParameter(SetHeaderComponent::class, 'Content-Type', 'application/json');
 					$response->setContent(json_encode(array('code' => $e->getCode(), 'message' => $e->getMessage(), 'reference' => $referenceCode), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 				}
 				return;

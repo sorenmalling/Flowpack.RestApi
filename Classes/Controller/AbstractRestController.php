@@ -3,6 +3,7 @@ namespace Flowpack\RestApi\Controller;
 
 use Doctrine\Common\Inflector\Inflector;
 use Flowpack\RestApi\Domain\Repository\ResourceRepository;
+use Neos\Flow\Http\Component\SetHeaderComponent;
 
 use Flowpack\RestApi\Utility\AggregateReflectionHelper;
 use Flowpack\RestApi\Utility\ResourceTypeHelper;
@@ -221,8 +222,8 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 
 		$errorObject = $this->transformErrorObject($errorObject);
 
-		$this->response->setStatus(422);
-		$this->response->setHeader('Content-Type', 'application/json');
+		$this->response->setStatusCode(422);
+		$this->response->setComponentParameter(SetHeaderComponent::class, 'Content-Type', 'application/json');
 
 		return json_encode($errorObject, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 	}
@@ -324,8 +325,8 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	protected function initializeAction()
 	{
 		$this->repository = new ResourceRepository(static::$RESOURCE_ENTITY_CLASS);
-		$this->response->setHeader('Access-Control-Allow-Origin', '*');
-		$this->response->setHeader('Content-Security-Policy', 'default-src \'none\'; frame-ancestors \'none\'');
+		$this->response->setComponentParameter(SetHeaderComponent::class, 'Access-Control-Allow-Origin', '*');
+		$this->response->setComponentParameter(SetHeaderComponent::class, 'Content-Security-Policy', 'default-src \'none\'; frame-ancestors \'none\'');
 	}
 
 	/**
@@ -479,9 +480,9 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 
 	protected function initializeOptionsAction()
 	{
-		$this->response->setHeader('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE, OPTIONS');
-		$this->response->setHeader('Access-Control-Allow-Headers', $this->request->getHttpRequest()->getHeader('Access-Control-Request-Headers'));
-		$this->response->setHeader('Access-Control-Max-Age', 3600);
+		$this->response->setComponentParameter(SetHeaderComponent::class, 'Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE, OPTIONS');
+		$this->response->setComponentParameter(SetHeaderComponent::class, 'Access-Control-Allow-Headers', $this->request->getHttpRequest()->getHeader('Access-Control-Request-Headers'));
+		$this->response->setComponentParameter(SetHeaderComponent::class, 'Access-Control-Max-Age', 3600);
 	}
 
 	/**
@@ -784,6 +785,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	{
 		$resourceProperties = static::resourceEntityPropertiesDescription($this->objectManager);
 		$filters = $this->getPropertyFilters($resourceProperties);
+		$linkHeaders = [];
 
 		$cursorProperty = $cursor !== null ? $cursor : $this->resourceEntityCursorProperty;
 		if ($cursorProperty === static::$RESOURCE_ENTITY_IDENTIFIER) {
@@ -805,7 +807,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 				}
 			}
 			$nextPageUri = $this->uriBuilder->setCreateAbsoluteUri(true)->uriFor('index', array('cursor' => $cursor, 'limit' => $limit, 'dir' => $dir === 'ASC' ? null : $dir, 'last' => $lastCursor, 'lastId' => $lastId !== null ? $lastIdentity : null));
-			$this->response->getHeaders()->set('Link', sprintf('<%s>; rel="next"', $nextPageUri), false);
+            $linkHeaders[] = sprintf('<%s>; rel="next"', $nextPageUri);
 		}
 		if ($firstResource) {
 			$lastIdentity = $this->persistenceManager->getIdentifierByObject($firstResource);
@@ -818,8 +820,10 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 				}
 			}
 			$prevPageUri = $this->uriBuilder->setCreateAbsoluteUri(true)->uriFor('index', array('cursor' => $cursor, 'limit' => $limit, 'dir' => $dir === 'ASC' ? 'DESC' : null, 'last' => $lastCursor, 'lastId' => $lastId !== null ? $lastIdentity : null));
-			$this->response->getHeaders()->set('Link', sprintf('<%s>; rel="prev"', $prevPageUri), false);
+			$linkHeaders[] = sprintf('<%s>; rel="prev"', $prevPageUri);
 		}
+
+        $this->response->setComponentParameter(SetHeaderComponent::class, 'Link', implode(';', $linkHeaders));
 
 		$this->view->assign('values', $values);
 		$this->setCollectionReturnValue();
@@ -899,34 +903,34 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			$resources = $this->getResources();
 			foreach ($resources as $resource) {
 				if (!$this->persistenceManager->isNewObject($resource)) {
-					$this->response->setStatus(409);
-					$this->response->setHeader('X-Resource-Identifier', $this->persistenceManager->getIdentifierByObject($resource));
+					$this->response->setStatusCode(409);
+					$this->response->setComponentParameter(SetHeaderComponent::class, 'X-Resource-Identifier', $this->persistenceManager->getIdentifierByObject($resource));
 					return '';
 				}
 				$this->repository->add($resource);
 			}
-			$this->response->setStatus(201);
+			$this->response->setStatusCode(201);
 			$resourceUri = $this->uriBuilder->reset()
 				->setFormat($this->request->getFormat())
 				->setCreateAbsoluteUri(true)
 				->uriFor('index');
-			$this->response->setHeader('Location', $resourceUri);
+			$this->response->setComponentParameter(SetHeaderComponent::class, 'Location', $resourceUri);
 			$this->view->assign('values', $resources);
 			$this->setCollectionReturnValue();
 		} else {
 			if (!$this->persistenceManager->isNewObject($resource)) {
-				$this->response->setStatus(409);
+				$this->response->setStatusCode(409);
 
 				return '';
 			}
 			$this->repository->add($resource);
-			$this->response->setHeader('X-Resource-Identifier', $this->persistenceManager->getIdentifierByObject($resource));
-			$this->response->setStatus(201);
+			$this->response->setComponentParameter(SetHeaderComponent::class, 'X-Resource-Identifier', $this->persistenceManager->getIdentifierByObject($resource));
+			$this->response->setStatusCode(201);
 			$resourceUri = $this->uriBuilder->reset()
 				->setFormat($this->request->getFormat())
 				->setCreateAbsoluteUri(true)
 				->uriFor('index', array('resource' => $resource));
-			$this->response->setHeader('Location', $resourceUri);
+			$this->response->setComponentParameter(SetHeaderComponent::class, 'Location', $resourceUri);
 			$this->view->assign('value', $resource);
 		}
 		return null;
@@ -973,7 +977,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 		}
 		$resource = $this->getResourceEntity();
 		$this->repository->remove($resource);
-		$this->response->setStatus(204);
+		$this->response->setStatusCode(204);
 		return '';
 	}
 

@@ -1,9 +1,9 @@
 {
     "name": "flowpack/rest-api",
-    "type": "neos-flow-package",
+    "type": "neos-package",
     "description": "",
     "require": {
-        "neos/flow": "^6.0"
+        "neos/flow": ">=6.3"
     },
     "autoload": {
         "psr-4": {
