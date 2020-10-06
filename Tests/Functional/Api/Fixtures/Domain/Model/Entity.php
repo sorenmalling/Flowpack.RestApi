@@ -1,16 +1,15 @@
 <?php
-namespace Trackmyrace\Core\Tests\Functional\Api\Fixtures\Domain\Model;
+namespace Flowpack\RestApi\Tests\Functional\Api\Fixtures\Domain\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
-use TYPO3\Flow\Annotations as Flow;
+use Neos\Flow\Annotations as Flow;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Class Entity
  *
- * @package Trackmyrace\Core\Tests\Api\Fixtures\Domain\Model
  * @Flow\Entity
  */
 class Entity

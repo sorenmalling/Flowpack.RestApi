@@ -1,7 +1,7 @@
 <?php
-namespace Trackmyrace\Core\Api\Controller;
+namespace Flowpack\RestApi\Controller;
 
-use Trackmyrace\Core\Api\Utility\ResourceTypeHelper;
+use Flowpack\RestApi\Utility\ResourceTypeHelper;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\View\JsonView;
 use Neos\Flow\Reflection\ClassReflection;
@@ -34,13 +34,13 @@ abstract class AbstractEntryController extends \Neos\Flow\Mvc\Controller\ActionC
 
 	/**
 	 * @var bool
-	 * @Flow\InjectConfiguration(package="Trackmyrace.Core",path="api.useAbsoluteUris")
+	 * @Flow\InjectConfiguration(package="Flowpack.RestApi",path="useAbsoluteUris")
 	 */
 	protected $useAbsoluteUris = true;
 
 	/**
 	 * @var bool
-	 * @Flow\InjectConfiguration(package="Trackmyrace.Core",path="api.normalizeResourceTypes")
+	 * @Flow\InjectConfiguration(package="Flowpack.RestApi",path="normalizeResourceTypes")
 	 */
 	protected $normalizeResourceTypes = false;
 

@@ -1,15 +1,13 @@
 <?php
-namespace Trackmyrace\Core\Tests\Unit\Api\Utility;
-use Trackmyrace\Core\Api\Utility\AggregateReflectionHelper;
-use TYPO3\Flow\Reflection\ClassSchema;
-use TYPO3\Flow\Reflection\ReflectionService;
+namespace Flowpack\RestApi\Tests\Unit\Api\Utility;
+use Flowpack\RestApi\Utility\AggregateReflectionHelper;
+use Neos\Flow\Reflection\ClassSchema;
+use Neos\Flow\Reflection\ReflectionService;
 
 /**
  * Test case for the AggregateReflectionHelper
- *
- * @package Trackmyrace\Core\Tests\Unit\Service
  */
-class AggregateReflectionHelperTest extends \TYPO3\Flow\Tests\UnitTestCase
+class AggregateReflectionHelperTest extends \Neos\Flow\Tests\UnitTestCase
 {
 
 	/**

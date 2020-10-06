@@ -1,5 +1,5 @@
 <?php
-namespace Trackmyrace\Core\Tests\Functional\Api\Fixtures\Controller;
+namespace Flowpack\RestApi\Tests\Functional\Api\Fixtures\Controller;
 
 class FilteredAggregateController extends AggregateController
 {

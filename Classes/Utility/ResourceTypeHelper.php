@@ -1,12 +1,11 @@
 <?php
-namespace Trackmyrace\Core\Api\Utility;
+namespace Flowpack\RestApi\Utility;
 
 use Neos\Flow\Annotations as Flow;
 
 /**
  * Class ResourceTypeHelper
  *
- * @package Trackmyrace\Core\Api\Utility
  * @Flow\Scope("singleton")
  */
 class ResourceTypeHelper

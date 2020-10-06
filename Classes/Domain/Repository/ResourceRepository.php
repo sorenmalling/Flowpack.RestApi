@@ -1,5 +1,5 @@
 <?php
-namespace Trackmyrace\Core\Api\Domain\Repository;
+namespace Flowpack\RestApi\Domain\Repository;
 
 use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Persistence\QueryInterface;
@@ -12,7 +12,6 @@ use Neos\Flow\Reflection\ReflectionService;
  * A generic REST resource entity repository, that allows for easily paginating through the entities with cursor-based pagination
  * See http://blog.novatec-gmbh.de/art-pagination-offset-vs-value-based-paging/ for more information.
  *
- * @package Trackmyrace\Core\Api\Domain\Repository
  * @Flow\Scope("singleton")
  */
 class ResourceRepository extends Repository

@@ -1,10 +1,10 @@
 <?php
-namespace Trackmyrace\Core\Tests\Functional\Api;
+namespace Flowpack\RestApi\Tests\Functional\Api;
 
-use Trackmyrace\Core\Api\Utility\LinkHeader;
-use TYPO3\Flow\Mvc\Routing\Route;
+use Flowpack\RestApi\Utility\LinkHeader;
+use Neos\Flow\Mvc\Routing\Route;
 
-class RestControllerTest extends \TYPO3\Flow\Tests\FunctionalTestCase
+class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 {
 	/**
 	 * @var boolean
@@ -34,7 +34,7 @@ class RestControllerTest extends \TYPO3\Flow\Tests\FunctionalTestCase
 		}
 
 		if (!$routesFound) {
-			throw new \Exception('No Routes for Trackmyrace.Core package defined. Please add a subRoute with name "Core" to your global Testing/Routes.yaml!');
+			throw new \Exception('No Routes for Flowpack.RestApi package defined. Please add a subRoute with name "Core" to your global Testing/Routes.yaml!');
 		}
 	}
 
@@ -54,7 +54,7 @@ class RestControllerTest extends \TYPO3\Flow\Tests\FunctionalTestCase
 	public function routerCorrectlyResolvesIndexAction()
 	{
 		$uri = $this->router->resolve(array(
-			'@package' => 'Trackmyrace.Core',
+			'@package' => 'Flowpack.RestApi',
 			'@subpackage' => 'Tests\Functional\Api\Fixtures',
 			'@controller' => 'Aggregate',
 			'@action' => 'index',

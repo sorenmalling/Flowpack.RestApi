@@ -1,10 +1,8 @@
 <?php
-namespace Trackmyrace\Core\Api\Utility;
+namespace Flowpack\RestApi\Utility;
 
 /**
  * Utility class for parsing "Link" headers by their "rel" tags.
- *
- * @package Trackmyrace\Core\Api\Utility
  */
 class LinkHeader
 {

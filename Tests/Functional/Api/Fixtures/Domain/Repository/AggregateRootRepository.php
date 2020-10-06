@@ -1,9 +1,9 @@
 <?php
-namespace Trackmyrace\Core\Tests\Functional\Api\Fixtures\Domain\Repository;
+namespace Flowpack\RestApi\Tests\Functional\Api\Fixtures\Domain\Repository;
 
-use TYPO3\Flow\Persistence\Repository;
+use Neos\Flow\Persistence\Repository;
 
-use TYPO3\Flow\Annotations as Flow;
+use Neos\Flow\Annotations as Flow;
 
 /**
  * @Flow\Scope("singleton")

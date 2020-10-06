@@ -1,5 +1,4 @@
-Trackmyrace:
-  Core:
-    api:
-      useAbsoluteUris: true
-      normalizeResourceTypes: false
+Flowpack:
+  RestApi:
+    useAbsoluteUris: true
+    normalizeResourceTypes: false

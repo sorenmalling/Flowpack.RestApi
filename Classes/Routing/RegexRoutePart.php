@@ -1,5 +1,5 @@
 <?php
-namespace Trackmyrace\Core\Api\Routing;
+namespace Flowpack\RestApi\Routing;
 
 use Neos\Flow\Annotations as Flow;
 

@@ -1,23 +1,18 @@
 {
-    "name": "trackmyrace/core-api",
-    "type": "typo3-flow-package",
+    "name": "flowpack/rest-api",
+    "type": "neos-flow-package",
     "description": "",
     "require": {
-        "neos/flow": "~3.3"
+        "neos/flow": "^6.0"
     },
     "autoload": {
         "psr-4": {
-            "Trackmyrace\\Core\\Api\\": "Classes"
+            "Flowpack\\RestApi\\": "Classes"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Trackmyrace\\Core\\Tests\\": "Tests"
+            "Flowpack\\RestApi\\Tests\\": "Tests"
         }
-    },
-    "extra": {
-        "applied-flow-migrations": [
-            "TYPO3.Flow-20151113161300"
-        ]
     }
 }

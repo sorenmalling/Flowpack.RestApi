@@ -1,9 +1,9 @@
 <?php
-namespace Trackmyrace\Core\Tests\Unit\Api\Utility;
+namespace Flowpack\RestApi\Tests\Unit\Api\Utility;
 
-use Trackmyrace\Core\Api\Utility\LinkHeader;
+use Flowpack\RestApi\Utility\LinkHeader;
 
-class LinkHeaderTest extends \TYPO3\Flow\Tests\UnitTestCase
+class LinkHeaderTest extends \Neos\Flow\Tests\UnitTestCase
 {
 
 	/**

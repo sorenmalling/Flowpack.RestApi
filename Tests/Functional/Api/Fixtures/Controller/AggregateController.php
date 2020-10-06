@@ -1,8 +1,8 @@
 <?php
-namespace Trackmyrace\Core\Tests\Functional\Api\Fixtures\Controller;
+namespace Flowpack\RestApi\Tests\Functional\Api\Fixtures\Controller;
 
-use Trackmyrace\Core\Api\Controller\AbstractRestController;
-use Trackmyrace\Core\Tests\Functional\Api\Fixtures\Domain\Model\AggregateRoot;
+use Flowpack\RestApi\Controller\AbstractRestController;
+use Flowpack\RestApi\Tests\Functional\Api\Fixtures\Domain\Model\AggregateRoot;
 
 class AggregateController extends AbstractRestController
 {
@@ -11,7 +11,7 @@ class AggregateController extends AbstractRestController
 	/**
 	 * An action that will throw an exception in order to test JSON error responses from API calls.
 	 *
-	 * @throws \TYPO3\Flow\Exception
+	 * @throws \Neos\Flow\Exception
 	 */
 	public function exceptionalAction()
 	{

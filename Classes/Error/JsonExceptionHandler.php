@@ -1,5 +1,5 @@
 <?php
-namespace Trackmyrace\Core\Api\Error;
+namespace Flowpack\RestApi\Error;
 
 use Neos\Flow\Error\ProductionExceptionHandler;
 use Neos\Flow\Annotations as Flow;

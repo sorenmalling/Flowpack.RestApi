@@ -1,7 +1,7 @@
 <?php
-namespace Trackmyrace\Core\Tests\Functional\Api\Fixtures\Controller;
+namespace Flowpack\RestApi\Tests\Functional\Api\Fixtures\Controller;
 
-class ApplicationException extends \TYPO3\Flow\Exception
+class ApplicationException extends \Neos\Flow\Exception
 {
 	public function __construct($message, $code)
 	{

@@ -1,7 +1,7 @@
 <?php
-namespace Trackmyrace\Core\Api\Error;
+namespace Flowpack\RestApi\Error;
 
-use Trackmyrace\Core\Api\Controller\AbstractRestController;
+use Flowpack\RestApi\Controller\AbstractRestController;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Flow\Core\Bootstrap;
@@ -13,7 +13,6 @@ use Neos\Flow\Exception as FlowException;
 /**
  * A flow AOP aspect that registers the JsonExceptionHandler if an RestController is targeted.
  *
- * @package Trackmyrace\Core\Api\Error
  * @Flow\Scope("singleton")
  * @Flow\Aspect
  */

@@ -1,9 +1,9 @@
 <?php
-namespace Trackmyrace\Core\Tests\Unit\Api\Utility;
+namespace Flowpack\RestApi\Tests\Unit\Api\Utility;
 
-use Trackmyrace\Core\Api\Utility\ResourceTypeHelper;
+use Flowpack\RestApi\Utility\ResourceTypeHelper;
 
-class ResourceTypeHelperTest extends \TYPO3\Flow\Tests\UnitTestCase
+class ResourceTypeHelperTest extends \Neos\Flow\Tests\UnitTestCase
 {
 
 	/**

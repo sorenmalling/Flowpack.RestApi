@@ -1,12 +1,12 @@
 <?php
-namespace Trackmyrace\Core\Api\Controller;
+namespace Flowpack\RestApi\Controller;
 
 use Doctrine\Common\Inflector\Inflector;
-use Trackmyrace\Core\Api\Domain\Repository\ResourceRepository;
+use Flowpack\RestApi\Domain\Repository\ResourceRepository;
 
-use Trackmyrace\Core\Api\Utility\AggregateReflectionHelper;
-use Trackmyrace\Core\Api\Utility\ResourceTypeHelper;
-use Trackmyrace\Core\Api\Utility\ViewConfigurationHelper;
+use Flowpack\RestApi\Utility\AggregateReflectionHelper;
+use Flowpack\RestApi\Utility\ResourceTypeHelper;
+use Flowpack\RestApi\Utility\ViewConfigurationHelper;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\View\JsonView;
 use Neos\Flow\ObjectManagement\ObjectManagerInterface;
@@ -28,7 +28,7 @@ use Neos\Flow\Validation\Error;
  *
  * This implementation is highly inspired by http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api
  *
- * @package Trackmyrace\Core\Api\Controller
+ * @package Flowpack\RestApi\Controller
  */
 abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionController
 {
@@ -150,13 +150,13 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 
 	/**
 	 * @var bool
-	 * @Flow\InjectConfiguration(package="Trackmyrace.Core",path="api.useAbsoluteUris")
+	 * @Flow\InjectConfiguration(package="Flowpack.RestApi", path="useAbsoluteUris")
 	 */
 	protected $useAbsoluteUris = true;
 
 	/**
 	 * @var bool
-	 * @Flow\InjectConfiguration(package="Trackmyrace.Core",path="api.normalizeResourceTypes")
+	 * @Flow\InjectConfiguration(package="Flowpack.RestApi",path="normalizeResourceTypes")
 	 */
 	protected $normalizeResourceTypes = false;
 

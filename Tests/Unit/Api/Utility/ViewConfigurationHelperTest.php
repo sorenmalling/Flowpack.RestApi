@@ -1,15 +1,14 @@
 <?php
-namespace Trackmyrace\Core\Tests\Unit\Api\Utility;
-use Trackmyrace\Core\Api\Utility\ViewConfigurationHelper;
-use TYPO3\Flow\Reflection\ClassSchema;
-use TYPO3\Flow\Reflection\ReflectionService;
+namespace Flowpack\RestApi\Tests\Unit\Api\Utility;
+
+use Flowpack\RestApi\Utility\ViewConfigurationHelper;
+use Neos\Flow\Reflection\ClassSchema;
+use Neos\Flow\Reflection\ReflectionService;
 
 /**
  * Test case for the ViewConfigurationHelper
- *
- * @package Trackmyrace\Core\Tests\Unit\Service
  */
-class ViewConfigurationHelperTest extends \TYPO3\Flow\Tests\UnitTestCase
+class ViewConfigurationHelperTest extends \Neos\Flow\Tests\UnitTestCase
 {
 
 	/**

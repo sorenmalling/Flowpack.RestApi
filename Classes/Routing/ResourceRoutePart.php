@@ -1,7 +1,7 @@
 <?php
-namespace Trackmyrace\Core\Api\Routing;
+namespace Flowpack\RestApi\Routing;
 
-use Trackmyrace\Core\Api\Controller\AbstractRestController;
+use Flowpack\RestApi\Controller\AbstractRestController;
 use Neos\Flow\Mvc\Routing\DynamicRoutePart;
 use Neos\Flow\ObjectManagement\ObjectManager;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
