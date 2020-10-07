@@ -218,7 +218,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 				$errorObject['errors'][] = array('code' => $error->getCode(), 'field' => $propertyPath, 'message' => $error->render());
 			}
 		}
-		$this->systemLogger->log($logMessage, LOG_ERR);
+		$this->logger->error($logMessage, $errorObject);
 
 		$errorObject = $this->transformErrorObject($errorObject);
 
