@@ -16,7 +16,7 @@ class ViewConfigurationHelperTest extends \Neos\Flow\Tests\UnitTestCase
 	 */
 	protected $helper;
 
-	public function setUp()
+	public function setUp(): void
 	{
 		$this->helper = $this->getAccessibleMock(ViewConfigurationHelper::class, array('dummy'));
 	}

@@ -3,6 +3,7 @@ namespace Flowpack\RestApi\Tests\Functional\Api;
 
 use Flowpack\RestApi\Utility\LinkHeader;
 use Neos\Flow\Mvc\Routing\Route;
+use Psr\Http\Message\ResponseInterface;
 
 class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 {
@@ -19,10 +20,9 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 	/**
 	 * Additional setup: Routes
 	 */
-	public function setUp()
+	public function setUp(): void
 	{
 		parent::setUp();
-
 		$routesFound = false;
 		/* @var $route Route */
 		foreach ($this->router->getRoutes() as $route) {
@@ -73,14 +73,14 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertNotEmpty($response->getHeader('Location'));
 
 		$response = $this->browser->request($response->getHeader('Location') . '.json', 'GET');
-		$this->assertNotEmpty($response->getContent());
-		$resource = json_decode($response->getContent(), true);
+		$this->assertNotEmpty($response->getBody()->getContents());
+		$resource = json_decode($response->getBody()->getContents(), true);
 		$this->assertEquals('Foo', $resource['title']);
 	}
 
 	/**
 	 * @param array $resourceProperties
-	 * @return \TYPO3\Flow\Http\Response
+	 * @return ResponseInterface
 	 */
 	protected function createResource(array $resourceProperties)
 	{
@@ -94,7 +94,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 	/**
 	 * @param array $resourceProperties
-	 * @return \TYPO3\Flow\Http\Response
+	 * @return ResponseInterface
 	 */
 	protected function createResources(array $resourceProperties)
 	{
@@ -118,8 +118,8 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertNotEmpty($response->getHeader('Location'));
 
 		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertNotEmpty($response->getContent());
-		$resource = json_decode($response->getContent(), true);
+		$this->assertNotEmpty($response->getBody()->getContents());
+		$resource = json_decode($response->getBody()->getContents(), true);
 		$this->assertEquals('Foo', $resource['title']);
 	}
 
@@ -133,12 +133,12 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 			array('title' => 'Bar'),
 			array('title' => 'Baz')
 		));
-		$this->assertEquals(201, $response->getStatusCode(), $response->getContent());
+		$this->assertEquals(201, $response->getStatusCode(), $response->getBody()->getContents());
 		$this->assertNotEmpty($response->getHeader('Location'));
 
 		$response = $this->browser->request($response->getHeader('Location') . '?cursor=title', 'GET');
-		$this->assertNotEmpty($response->getContent());
-		$resources = json_decode($response->getContent(), true);
+		$this->assertNotEmpty($response->getBody()->getContents());
+		$resources = json_decode($response->getBody()->getContents(), true);
 		$this->assertEquals('Bar', $resources[0]['title']);
 		$this->assertEquals('Baz', $resources[1]['title']);
 		$this->assertEquals('Foo', $resources[2]['title']);
@@ -159,8 +159,8 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertNotEmpty($response->getHeader('Location'));
 
 		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertNotEmpty($response->getContent());
-		$resource = json_decode($response->getContent(), true);
+		$this->assertNotEmpty($response->getBody()->getContents());
+		$resource = json_decode($response->getBody()->getContents(), true);
 		$this->assertEquals('Bar', $resource['entities'][0]['title']);
 	}
 
@@ -179,8 +179,8 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertStringEndsWith('e413ed09-bd63-4a4e-9e0a-026f9179a2c1', $response->getHeader('Location'));
 
 		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertNotEmpty($response->getContent());
-		$resource = json_decode($response->getContent(), true);
+		$this->assertNotEmpty($response->getBody()->getContents());
+		$resource = json_decode($response->getBody()->getContents(), true);
 		$this->assertEquals('Foo', $resource['title']);
 		$this->assertEquals('e413ed09-bd63-4a4e-9e0a-026f9179a2c1', $resource['uuid']);
 	}
@@ -201,8 +201,8 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertNotEmpty($response->getHeader('Location'));
 
 		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertNotEmpty($response->getContent());
-		$resource = json_decode($response->getContent(), true);
+		$this->assertNotEmpty($response->getBody()->getContents());
+		$resource = json_decode($response->getBody()->getContents(), true);
 		$this->assertEquals('Foo', $resource['title']);
 	}
 
@@ -223,11 +223,11 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		);
 		$response = $this->browser->request($resourceUri, 'PUT', $arguments);
 		$this->assertEquals(200, $response->getStatusCode());
-		$this->assertEmpty($response->getContent());
+		$this->assertEmpty($response->getBody()->getContents());
 
 		$response = $this->browser->request($resourceUri, 'GET');
-		$this->assertNotEmpty($response->getContent());
-		$resource = json_decode($response->getContent(), true);
+		$this->assertNotEmpty($response->getBody()->getContents());
+		$resource = json_decode($response->getBody()->getContents(), true);
 		$this->assertEquals('Bar', $resource['title']);
 	}
 
@@ -243,7 +243,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($resourceUri, 'DELETE');
 		$this->assertEquals(204, $response->getStatusCode());
-		$this->assertEmpty($response->getContent());
+		$this->assertEmpty($response->getBody()->getContents());
 		$this->persistenceManager->clearState();
 
 		$response = $this->browser->request($resourceUri, 'GET');
@@ -269,8 +269,8 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($response->getHeader('Location'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$this->assertNotEmpty($response->getContent());
-		$resource = json_decode($response->getContent(), true);
+		$this->assertNotEmpty($response->getBody()->getContents());
+		$resource = json_decode($response->getBody()->getContents(), true);
 		$this->assertFalse(isset($resource['otherAggregate']['title']));
 	}
 
@@ -344,7 +344,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/describe'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$description = json_decode($response->getContent(), true);
+		$description = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat($expected, $this->equalTo($description), 'The received entity description was: ' . var_export($description, true));
 	}
 
@@ -364,14 +364,14 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate?limit=2&cursor=title'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(2));
 		$this->assertThat($results[0]['title'], $this->equalTo('Bar'));
 		$this->assertThat($results[1]['title'], $this->equalTo('Baz'));
 
 		$response = $this->browser->request($this->uriFor('aggregate?limit=2&cursor=title&last=Baz'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(1));
 		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
 	}
@@ -394,7 +394,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate?limit=2'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(2));
 		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
 		$this->assertThat($results[1]['title'], $this->equalTo('Bar'));
@@ -405,7 +405,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($next, 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(1));
 		$this->assertThat($results[0]['title'], $this->equalTo('Baz'));
 	}
@@ -433,7 +433,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($next, 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(1));
 		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
 	}
@@ -454,7 +454,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/filter?title=F%'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(1));
 		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
 	}
@@ -475,7 +475,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/filter?limit=1&offset=1'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(1));
 		$this->assertThat($results[0]['title'], $this->equalTo('Bar'));
 	}
@@ -496,7 +496,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/filter?sort=title'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(3));
 		$this->assertThat($results[0]['title'], $this->equalTo('Bar'));
 		$this->assertThat($results[1]['title'], $this->equalTo('Baz'));
@@ -519,7 +519,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/filter?sort=-title'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(3));
 		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
 		$this->assertThat($results[1]['title'], $this->equalTo('Baz'));
@@ -541,8 +541,8 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		}
 
 		$response = $this->browser->request($this->uriFor('aggregate/search?query=Ba&sort=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode(), $response->getContent());
-		$results = json_decode($response->getContent(), true);
+		$this->assertEquals(200, $response->getStatusCode(), $response->getBody()->getContents());
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($results['results']));
 		$this->assertThat(count($results['results']), $this->equalTo(2));
 		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar'));
@@ -565,7 +565,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/search?query='.urlencode('"r Bar"')), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($results['results']));
 		$this->assertThat(count($results['results']), $this->equalTo(1));
 		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar Bar'));
@@ -590,8 +590,8 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		}
 
 		$response = $this->browser->request($this->uriFor('aggregate/search?query=Ba&sort=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode(), $response->getContent());
-		$results = json_decode($response->getContent(), true);
+		$this->assertEquals(200, $response->getStatusCode(), $response->getBody()->getContents());
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($results['results']));
 		$this->assertThat(count($results['results']), $this->equalTo(2));
 		$this->assertThat($results['results'][0]['title'], $this->equalTo('Aggregate 2'));
@@ -615,14 +615,14 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/search?query='.urlencode('Bar +Foo')), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($results['results']));
 		$this->assertThat(count($results['results']), $this->equalTo(1));
 		$this->assertThat($results['results'][0]['title'], $this->equalTo('Foo Bar'));
 
 		$response = $this->browser->request($this->uriFor('aggregate/search?query='.urlencode('Bar -Foo').'&sort=title'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($results['results']));
 		$this->assertThat(count($results['results']), $this->equalTo(3));
 		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar Bar'));
@@ -649,7 +649,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/search?query='.urlencode('Bar -Foo').'&sort=title'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($results['results']));
 		$this->assertThat(count($results['results']), $this->equalTo(2));
 		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar Bar'));
@@ -673,7 +673,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate/search?query=Ba&search=title&sort=title'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($results['results']));
 		$this->assertThat(count($results['results']), $this->equalTo(2));
 		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar'));
@@ -697,14 +697,14 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('filteredaggregate?cursor=email'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(2));
 		$this->assertThat($results[0]['email'], $this->equalTo('a@trackmyrace.com'));
 		$this->assertThat($results[1]['email'], $this->equalTo('b@trackmyrace.com'));
 
 		$response = $this->browser->request($this->uriFor('filteredaggregate/filter?cursor=email'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertThat(count($results), $this->equalTo(2));
 		$this->assertThat($results[0]['email'], $this->equalTo('a@trackmyrace.com'));
 		$this->assertThat($results[1]['email'], $this->equalTo('b@trackmyrace.com'));
@@ -725,7 +725,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('filteredaggregate'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertFalse(isset($results[0]['entities']), 'Subentities are included');
 	}
 
@@ -744,7 +744,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('filteredaggregate?fields=title,email,entities'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertFalse(isset($results[0]['entities']), 'Subentities are included');
 	}
 
@@ -763,7 +763,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate?fields=title,email'), 'GET');
 		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getContent(), true);
+		$results = json_decode($response->getBody()->getContents(), true);
 		$this->assertFalse(isset($results[0]['entities']), 'Subentities are included');
 	}
 
@@ -777,7 +777,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertEquals('application/json', $response->getHeader('Content-Type'));
 		$this->assertEquals('*', $response->getHeader('Access-Control-Allow-Origin'));
 
-		$error = json_decode($response->getContent(), true);
+		$error = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($error['code']), 'Error code is not set');
 		$this->assertTrue(isset($error['message']), 'Error message is not set');
 		$this->assertTrue(isset($error['reference']), 'Error reference is not set');
@@ -793,7 +793,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertEquals('application/json', $response->getHeader('Content-Type'));
 		$this->assertEquals('*', $response->getHeader('Access-Control-Allow-Origin'));
 
-		$error = json_decode($response->getContent(), true);
+		$error = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($error['code']), 'Error code is not set');
 		$this->assertTrue(isset($error['message']), 'Error message is not set');
 		$this->assertTrue(isset($error['reference']), 'Error reference is not set');
@@ -809,7 +809,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertEquals('application/json', $response->getHeader('Content-Type'));
 		$this->assertEquals('*', $response->getHeader('Access-Control-Allow-Origin'));
 
-		$error = json_decode($response->getContent(), true);
+		$error = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($error['message']), 'Error message is not set');
 		$this->assertTrue(isset($error['errors']), 'Error property sub-errors are not set');
 	}
@@ -824,7 +824,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$this->assertEquals('application/json', $response->getHeader('Content-Type'));
 		$this->assertEquals('*', $response->getHeader('Access-Control-Allow-Origin'));
 
-		$error = json_decode($response->getContent(), true);
+		$error = json_decode($response->getBody()->getContents(), true);
 		$this->assertTrue(isset($error['code']), 'Error code is not set');
 		$this->assertTrue(isset($error['message']), 'Error message is not set');
 		$this->assertTrue(isset($error['reference']), 'Error reference is not set');
