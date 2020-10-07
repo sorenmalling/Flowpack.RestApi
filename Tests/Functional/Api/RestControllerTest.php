@@ -7,826 +7,779 @@ use Psr\Http\Message\ResponseInterface;
 
 class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 {
-	/**
-	 * @var boolean
-	 */
-	protected static $testablePersistenceEnabled = true;
-
-	/**
-	 * @var string
-	 */
-	protected $baseRoute;
-
-	/**
-	 * Additional setup: Routes
-	 */
-	public function setUp(): void
-	{
-		parent::setUp();
-		$routesFound = false;
-		/* @var $route Route */
-		foreach ($this->router->getRoutes() as $route) {
-			if (strpos($route->getName(), 'Functional Test: API test Route :: REST API discovery entry point') !== false) {
-				$this->baseRoute = $route->getUriPattern();
-				$routesFound = true;
-				break;
-			}
-		}
-
-		if (!$routesFound) {
-			throw new \Exception('No Routes for Flowpack.RestApi package defined. Please add a subRoute with name "Core" to your global Testing/Routes.yaml!');
-		}
-	}
-
-	/**
-	 * @param string $relUri
-	 * @param bool $absolute
-	 * @return string
-	 */
-	protected function uriFor($relUri, $absolute = true)
-	{
-		return ($absolute ? 'http://localhost/' : '') . $this->baseRoute . '/' . ltrim($relUri, '/');
-	}
-
-	/**
-	 * @test
-	 */
-	public function routerCorrectlyResolvesIndexAction()
-	{
-		$uri = $this->router->resolve(array(
-			'@package' => 'Flowpack.RestApi',
-			'@subpackage' => 'Tests\Functional\Api\Fixtures',
-			'@controller' => 'Aggregate',
-			'@action' => 'index',
-			'@format' => 'json'
-		));
-		$this->assertEquals($this->uriFor('aggregate', false), $uri, $uri);
-	}
-
-	/**
-	 * @test
-	 */
-	public function routesWithFormatBasicallyWork()
-	{
-		$response = $this->createResource(array('title' => 'Foo'));
-		$this->assertEquals(201, $response->getStatusCode());
-		$this->assertNotEmpty($response->getHeader('Location'));
-
-		$response = $this->browser->request($response->getHeader('Location') . '.json', 'GET');
-		$this->assertNotEmpty($response->getBody()->getContents());
-		$resource = json_decode($response->getBody()->getContents(), true);
-		$this->assertEquals('Foo', $resource['title']);
-	}
-
-	/**
-	 * @param array $resourceProperties
-	 * @return ResponseInterface
-	 */
-	protected function createResource(array $resourceProperties)
-	{
-		$arguments = array(
-			'resource' => $resourceProperties
-		);
-		$response = $this->browser->request($this->uriFor('aggregate'), 'POST', $arguments);
-		$this->persistenceManager->clearState();
-		return $response;
-	}
-
-	/**
-	 * @param array $resourceProperties
-	 * @return ResponseInterface
-	 */
-	protected function createResources(array $resourceProperties)
-	{
-		$arguments = array(
-			'resources' => $resourceProperties
-		);
-		$response = $this->browser->request($this->uriFor('aggregate'), 'POST', $arguments);
-		$this->persistenceManager->clearState();
-		return $response;
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeCreatedViaRestCall()
-	{
-		$response = $this->createResource(array(
-			'title' => 'Foo'
-		));
-		$this->assertEquals(201, $response->getStatusCode());
-		$this->assertNotEmpty($response->getHeader('Location'));
-
-		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertNotEmpty($response->getBody()->getContents());
-		$resource = json_decode($response->getBody()->getContents(), true);
-		$this->assertEquals('Foo', $resource['title']);
-	}
-
-	/**
-	 * @test
-	 */
-	public function multipleResourcesCanBeCreatedViaSingleRestCall()
-	{
-		$response = $this->createResources(array(
-			array('title' => 'Foo'),
-			array('title' => 'Bar'),
-			array('title' => 'Baz')
-		));
-		$this->assertEquals(201, $response->getStatusCode(), $response->getBody()->getContents());
-		$this->assertNotEmpty($response->getHeader('Location'));
-
-		$response = $this->browser->request($response->getHeader('Location') . '?cursor=title', 'GET');
-		$this->assertNotEmpty($response->getBody()->getContents());
-		$resources = json_decode($response->getBody()->getContents(), true);
-		$this->assertEquals('Bar', $resources[0]['title']);
-		$this->assertEquals('Baz', $resources[1]['title']);
-		$this->assertEquals('Foo', $resources[2]['title']);
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeCreatedWithSubEntitiesViaRestCall()
-	{
-		$response = $this->createResource(array(
-			'title' => 'Foo',
-			'entities' => array(
-				array( 'title' => 'Bar' )
-			)
-		));
-		$this->assertEquals(201, $response->getStatusCode());
-		$this->assertNotEmpty($response->getHeader('Location'));
-
-		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertNotEmpty($response->getBody()->getContents());
-		$resource = json_decode($response->getBody()->getContents(), true);
-		$this->assertEquals('Bar', $resource['entities'][0]['title']);
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeCreatedWithPredefinedIdentifierViaRestCall()
-	{
-		$arguments = array(
-			'resource' => array(
-				'title' => 'Foo',
-			)
-		);
-		$response = $this->browser->request($this->uriFor('aggregate/e413ed09-bd63-4a4e-9e0a-026f9179a2c1'), 'POST', $arguments);
-		$this->assertEquals(201, $response->getStatusCode());
-		$this->assertStringEndsWith('e413ed09-bd63-4a4e-9e0a-026f9179a2c1', $response->getHeader('Location'));
-
-		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertNotEmpty($response->getBody()->getContents());
-		$resource = json_decode($response->getBody()->getContents(), true);
-		$this->assertEquals('Foo', $resource['title']);
-		$this->assertEquals('e413ed09-bd63-4a4e-9e0a-026f9179a2c1', $resource['uuid']);
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeCreatedViaJsonRestCall()
-	{
-		$jsonBody = json_encode(array(
-			'resource' => array(
-				'title' => 'Foo',
-			)
-		));
-		$response = $this->browser->request($this->uriFor('aggregate'), 'POST', array(), array(), array('HTTP_CONTENT_TYPE' => 'application/json'), $jsonBody);
-
-		$this->assertEquals(201, $response->getStatusCode());
-		$this->assertNotEmpty($response->getHeader('Location'));
-
-		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertNotEmpty($response->getBody()->getContents());
-		$resource = json_decode($response->getBody()->getContents(), true);
-		$this->assertEquals('Foo', $resource['title']);
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourceCanBeUpdatedViaRestCall()
-	{
-		$response = $this->createResource(array(
-			'title' => 'Foo'
-		));
-		$resourceUri = $response->getHeader('Location');
-
-		$arguments = array(
-			'resource' => array(
-				'title' => 'Bar'
-			)
-		);
-		$response = $this->browser->request($resourceUri, 'PUT', $arguments);
-		$this->assertEquals(200, $response->getStatusCode());
-		$this->assertEmpty($response->getBody()->getContents());
-
-		$response = $this->browser->request($resourceUri, 'GET');
-		$this->assertNotEmpty($response->getBody()->getContents());
-		$resource = json_decode($response->getBody()->getContents(), true);
-		$this->assertEquals('Bar', $resource['title']);
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourceCanBeDeletedViaRestCall()
-	{
-		$response = $this->createResource(array(
-			'title' => 'Foo'
-		));
-		$resourceUri = $response->getHeader('Location');
-
-		$response = $this->browser->request($resourceUri, 'DELETE');
-		$this->assertEquals(204, $response->getStatusCode());
-		$this->assertEmpty($response->getBody()->getContents());
-		$this->persistenceManager->clearState();
-
-		$response = $this->browser->request($resourceUri, 'GET');
-		$this->assertEquals(404, $response->getStatusCode());
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourceReturnedWillRespectAggregateBoundariesByDefault()
-	{
-		$arguments = array(
-			'resource' => array(
-				'title' => 'Foo',
-			)
-		);
-		$this->browser->request($this->uriFor('aggregate/e413ed09-bd63-4a4e-9e0a-026f9179a2c1'), 'POST', $arguments);
-
-		$response = $this->createResource(array(
-			'title' => 'Bar',
-			'otherAggregate' => 'e413ed09-bd63-4a4e-9e0a-026f9179a2c1'
-		));
-
-		$response = $this->browser->request($response->getHeader('Location'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$this->assertNotEmpty($response->getBody()->getContents());
-		$resource = json_decode($response->getBody()->getContents(), true);
-		$this->assertFalse(isset($resource['otherAggregate']['title']));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourceCanBeDescribedViaRestCall()
-	{
-		$expected = array(
-			'title' => array(
-				'type' => 'string',
-				'elementType' => NULL,
-				'transient' => false,
-				'identity' => false,
-				'multiValued' => false,
-			),
-			'email' => array(
-				'type' => 'string',
-				'elementType' => NULL,
-				'transient' => false,
-				'identity' => false,
-				'multiValued' => false,
-			),
-			'entities' => array(
-				'type' => 'Collection',
-				'elementType' => 'Entity',
-				'transient' => false,
-				'identity' => false,
-				'multiValued' => true,
-				'schema' => array(
-					'title' => array(
-							'type' => 'string',
-							'elementType' => NULL,
-							'transient' => false,
-							'identity' => false,
-							'multiValued' => false,
-					),
-					'entities' => array(
-							'type' => 'Collection',
-							'elementType' => 'Entity',
-							'transient' => false,
-							'identity' => false,
-							'multiValued' => true,
-							'schema' => 'Entity',
-					),
-					'uuid' => array(
-							'type' => 'string',
-							'elementType' => NULL,
-							'transient' => false,
-							'identity' => true,
-							'multiValued' => false,
-					),
-				),
-			),
-			'otherAggregate' => array(
-				'type' => 'AggregateRoot',
-				'elementType' => NULL,
-				'transient' => false,
-				'identity' => false,
-				'multiValued' => false,
-				'schema' => 'AggregateRoot',
-			),
-			'uuid' => array(
-				'type' => 'string',
-				'elementType' => NULL,
-				'transient' => false,
-				'identity' => true,
-				'multiValued' => false,
-			),
-		);
-
-		$response = $this->browser->request($this->uriFor('aggregate/describe'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$description = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat($expected, $this->equalTo($description), 'The received entity description was: ' . var_export($description, true));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeListedWithPagination()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate?limit=2&cursor=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(2));
-		$this->assertThat($results[0]['title'], $this->equalTo('Bar'));
-		$this->assertThat($results[1]['title'], $this->equalTo('Baz'));
-
-		$response = $this->browser->request($this->uriFor('aggregate?limit=2&cursor=title&last=Baz'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(1));
-		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeListedWithCursorPaginationByDefault()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz'
-		);
-		$identity = 1;
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'__identity' => 'e413ed09-bd63-4a4e-9e0a-026f9179a2c' . $identity++,
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate?limit=2'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(2));
-		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
-		$this->assertThat($results[1]['title'], $this->equalTo('Bar'));
-
-		$links = new LinkHeader($response->getHeader('Link'));
-		$next = $links->getNext();
-		$this->assertNotNull($next);
-
-		$response = $this->browser->request($next, 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(1));
-		$this->assertThat($results[0]['title'], $this->equalTo('Baz'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesListReturnsPaginationLinkInHeader()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate?limit=2&cursor=title'), 'GET');
-
-		$links = new LinkHeader($response->getHeader('Link'));
-		$this->assertNotNull($links->getPrev());
-		$next = $links->getNext();
-		$this->assertNotNull($next);
-
-		$response = $this->browser->request($next, 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(1));
-		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeFiltered()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/filter?title=F%'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(1));
-		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBePaginatedWithOffsetAndLimitInFilter()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/filter?limit=1&offset=1'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(1));
-		$this->assertThat($results[0]['title'], $this->equalTo('Bar'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeSortedInFilter()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/filter?sort=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(3));
-		$this->assertThat($results[0]['title'], $this->equalTo('Bar'));
-		$this->assertThat($results[1]['title'], $this->equalTo('Baz'));
-		$this->assertThat($results[2]['title'], $this->equalTo('Foo'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeSortedBackwardsInFilter()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/filter?sort=-title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(3));
-		$this->assertThat($results[0]['title'], $this->equalTo('Foo'));
-		$this->assertThat($results[1]['title'], $this->equalTo('Baz'));
-		$this->assertThat($results[2]['title'], $this->equalTo('Bar'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeSearchedByQuery()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz', 'Bux'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/search?query=Ba&sort=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode(), $response->getBody()->getContents());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($results['results']));
-		$this->assertThat(count($results['results']), $this->equalTo(2));
-		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar'));
-		$this->assertThat($results['results'][1]['title'], $this->equalTo('Baz'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeSearchedByQueryWithQuotedString()
-	{
-		$resourceTitles = array(
-			'Foo Bar', 'Bar Bar', 'Baz Bar', 'Bux Bar'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/search?query='.urlencode('"r Bar"')), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($results['results']));
-		$this->assertThat(count($results['results']), $this->equalTo(1));
-		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar Bar'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeSearchedByQueryWithinSubEntities()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz', 'Bux'
-		);
-		$count = 0;
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => 'Aggregate ' . ++$count,
-				'entities' => array(
-					array( 'title' => $title )
-				)
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/search?query=Ba&sort=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode(), $response->getBody()->getContents());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($results['results']));
-		$this->assertThat(count($results['results']), $this->equalTo(2));
-		$this->assertThat($results['results'][0]['title'], $this->equalTo('Aggregate 2'));
-		$this->assertThat($results['results'][1]['title'], $this->equalTo('Aggregate 3'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeSearchedByQueryWithSimpleBooleanLogic()
-	{
-		$resourceTitles = array(
-			'Foo Bar', 'Bar Bar', 'Baz Bar', 'Bux Bar'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title,
-				'email' => '',
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/search?query='.urlencode('Bar +Foo')), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($results['results']));
-		$this->assertThat(count($results['results']), $this->equalTo(1));
-		$this->assertThat($results['results'][0]['title'], $this->equalTo('Foo Bar'));
-
-		$response = $this->browser->request($this->uriFor('aggregate/search?query='.urlencode('Bar -Foo').'&sort=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($results['results']));
-		$this->assertThat(count($results['results']), $this->equalTo(3));
-		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar Bar'));
-		$this->assertThat($results['results'][1]['title'], $this->equalTo('Baz Bar'));
-		$this->assertThat($results['results'][2]['title'], $this->equalTo('Bux Bar'));
-	}
-
-	/**
-	 * see ResourceRepository::findBySearch(...) and https://jira.neos.io/browse/FLOW-462
-	 *
-	 * @test
-	 */
-	public function logicalNotQueryWorksCorrectlyOnNullFields()
-	{
-		$resourceTitles = array(
-			'Foo Bar', 'Bar Bar', 'Baz Bar'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title,
-				'email' => null
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/search?query='.urlencode('Bar -Foo').'&sort=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($results['results']));
-		$this->assertThat(count($results['results']), $this->equalTo(2));
-		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar Bar'));
-		$this->assertThat($results['results'][1]['title'], $this->equalTo('Baz Bar'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesCanBeSearchedWithinSpecificPropertiesOnly()
-	{
-		$resourceTitles = array(
-			'Foo', 'Bar', 'Baz', 'Bux'
-		);
-		foreach ($resourceTitles as $title) {
-			$this->createResource(array(
-				'title' => $title,
-				'email' => 'bar@trackmyrace.com'
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('aggregate/search?query=Ba&search=title&sort=title'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($results['results']));
-		$this->assertThat(count($results['results']), $this->equalTo(2));
-		$this->assertThat($results['results'][0]['title'], $this->equalTo('Bar'));
-		$this->assertThat($results['results'][1]['title'], $this->equalTo('Baz'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourcesDefaultFilterIsAppliedInAllQueryActions()
-	{
-		$resourceEmails = array(
-			'a@trackmyrace.com', 'b@trackmyrace.com', 'c@mandigo.de'
-		);
-		foreach ($resourceEmails as $email) {
-			$this->createResource(array(
-				'title' => 'Foo',
-				'email' => $email
-			));
-		}
-
-		$response = $this->browser->request($this->uriFor('filteredaggregate?cursor=email'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(2));
-		$this->assertThat($results[0]['email'], $this->equalTo('a@trackmyrace.com'));
-		$this->assertThat($results[1]['email'], $this->equalTo('b@trackmyrace.com'));
-
-		$response = $this->browser->request($this->uriFor('filteredaggregate/filter?cursor=email'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertThat(count($results), $this->equalTo(2));
-		$this->assertThat($results[0]['email'], $this->equalTo('a@trackmyrace.com'));
-		$this->assertThat($results[1]['email'], $this->equalTo('b@trackmyrace.com'));
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourceRenderingCanBeConfiguredViaRenderConfigurationProperty()
-	{
-		$this->createResource(array(
-			'title' => 'Foo',
-			'email' => 'test@trackmyrace.com',
-			'entities' => array(
-				array('title' => 'Bar')
-			)
-		));
-
-		$response = $this->browser->request($this->uriFor('filteredaggregate'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertFalse(isset($results[0]['entities']), 'Subentities are included');
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourceRenderingConfiguredViaFieldsArgumentIsRestrictedByRenderConfigurationProperty()
-	{
-		$this->createResource(array(
-			'title' => 'Foo',
-			'email' => 'test@trackmyrace.com',
-			'entities' => array(
-				array('title' => 'Bar')
-			)
-		));
-
-		$response = $this->browser->request($this->uriFor('filteredaggregate?fields=title,email,entities'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertFalse(isset($results[0]['entities']), 'Subentities are included');
-	}
-
-	/**
-	 * @test
-	 */
-	public function resourceRenderingCanBeConfiguredViaFieldsArgument()
-	{
-		$this->createResource(array(
-			'title' => 'Foo',
-			'email' => 'test@trackmyrace.com',
-			'entities' => array(
-				array('title' => 'Bar')
-			)
-		));
-
-		$response = $this->browser->request($this->uriFor('aggregate?fields=title,email'), 'GET');
-		$this->assertEquals(200, $response->getStatusCode());
-		$results = json_decode($response->getBody()->getContents(), true);
-		$this->assertFalse(isset($results[0]['entities']), 'Subentities are included');
-	}
-
-	/**
-	 * @test
-	 */
-	public function nonExistingResourcesResultIn404JsonError()
-	{
-		$response = $this->browser->request($this->uriFor('aggregate/12345678'), 'GET');
-		$this->assertEquals(404, $response->getStatusCode());
-		$this->assertEquals('application/json', $response->getHeader('Content-Type'));
-		$this->assertEquals('*', $response->getHeader('Access-Control-Allow-Origin'));
-
-		$error = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($error['code']), 'Error code is not set');
-		$this->assertTrue(isset($error['message']), 'Error message is not set');
-		$this->assertTrue(isset($error['reference']), 'Error reference is not set');
-	}
-
-	/**
-	 * @test
-	 */
-	public function propertyMappingErrorsResultIn500JsonError()
-	{
-		$response = $this->createResource(array('nonExistingProperty' => 'Foo Bar!'));
-		$this->assertEquals(500, $response->getStatusCode());
-		$this->assertEquals('application/json', $response->getHeader('Content-Type'));
-		$this->assertEquals('*', $response->getHeader('Access-Control-Allow-Origin'));
-
-		$error = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($error['code']), 'Error code is not set');
-		$this->assertTrue(isset($error['message']), 'Error message is not set');
-		$this->assertTrue(isset($error['reference']), 'Error reference is not set');
-	}
-
-	/**
-	 * @test
-	 */
-	public function validationErrorsResultIn422JsonError()
-	{
-		$response = $this->createResource(array('email' => 'Foo Bar!'));
-		$this->assertEquals(422, $response->getStatusCode());
-		$this->assertEquals('application/json', $response->getHeader('Content-Type'));
-		$this->assertEquals('*', $response->getHeader('Access-Control-Allow-Origin'));
-
-		$error = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($error['message']), 'Error message is not set');
-		$this->assertTrue(isset($error['errors']), 'Error property sub-errors are not set');
-	}
-
-	/**
-	 * @test
-	 */
-	public function exceptionsInTheApplicationCanReturnCustomStatusCodeJsonError()
-	{
-		$response = $this->browser->request($this->uriFor('aggregate/exceptional'), 'GET');
-		$this->assertEquals(9001, $response->getStatusCode());
-		$this->assertEquals('application/json', $response->getHeader('Content-Type'));
-		$this->assertEquals('*', $response->getHeader('Access-Control-Allow-Origin'));
-
-		$error = json_decode($response->getBody()->getContents(), true);
-		$this->assertTrue(isset($error['code']), 'Error code is not set');
-		$this->assertTrue(isset($error['message']), 'Error message is not set');
-		$this->assertTrue(isset($error['reference']), 'Error reference is not set');
-	}
+    /**
+     * @var boolean
+     */
+    protected static $testablePersistenceEnabled = true;
+
+    /**
+     * @var string
+     */
+    protected $baseRoute;
+
+    /**
+     * Additional setup: Routes
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $routesFound = false;
+        /* @var $route Route */
+        foreach ($this->router->getRoutes() as $route) {
+            if (strpos($route->getName(), 'Functional Test: API test Route :: REST API discovery entry point') !== false) {
+                $this->baseRoute = $route->getUriPattern();
+                $routesFound = true;
+                break;
+            }
+        }
+
+        if (!$routesFound) {
+            throw new \Exception('No Routes for Flowpack.RestApi package defined. Please add a subRoute with name "Core" to your global Testing/Routes.yaml!');
+        }
+    }
+
+    /**
+     * @param string $relUri
+     * @param bool $absolute
+     * @return string
+     */
+    protected function uriFor($relUri, $absolute = true)
+    {
+        return ($absolute ? 'http://localhost/' : '') . $this->baseRoute . '/' . ltrim($relUri, '/');
+    }
+
+    /**
+     * @param string $uri
+     * @return array
+     */
+    protected function get(string $uri): array
+    {
+        $response = $this->browser->request($uri, 'GET');
+        self::assertSame(200, $response->getStatusCode());
+        self::assertNotEmpty($response->getBody()->getContents());
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    /**
+     * @test
+     */
+    public function routerCorrectlyResolvesIndexAction()
+    {
+        $uri = $this->router->resolve([
+            '@package' => 'Flowpack.RestApi',
+            '@subpackage' => 'Tests\Functional\Api\Fixtures',
+            '@controller' => 'Aggregate',
+            '@action' => 'index',
+            '@format' => 'json'
+        ]);
+        self::assertSame($this->uriFor('aggregate', false), $uri, $uri);
+    }
+
+    /**
+     * @test
+     */
+    public function routesWithFormatBasicallyWork()
+    {
+        $response = $this->createResource(['title' => 'Foo']);
+        self::assertSame(201, $response->getStatusCode());
+        self::assertNotEmpty($response->getHeaderLine('Location'));
+
+        $resource = $this->get($response->getHeaderLine('Location') . '.json');
+        self::assertSame('Foo', $resource['title']);
+    }
+
+    /**
+     * @param array $resourceProperties
+     * @return ResponseInterface
+     */
+    protected function createResource(array $resourceProperties)
+    {
+        $arguments = [
+            'resource' => $resourceProperties
+        ];
+        $response = $this->browser->request($this->uriFor('aggregate'), 'POST', $arguments);
+        $this->persistenceManager->clearState();
+        return $response;
+    }
+
+    /**
+     * @param array $resourceProperties
+     * @return ResponseInterface
+     */
+    protected function createResources(array $resourceProperties)
+    {
+        $arguments = [
+            'resources' => $resourceProperties
+        ];
+        $response = $this->browser->request($this->uriFor('aggregate'), 'POST', $arguments);
+        $this->persistenceManager->clearState();
+        return $response;
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeCreatedViaRestCall()
+    {
+        $response = $this->createResource([
+            'title' => 'Foo'
+        ]);
+        self::assertSame(201, $response->getStatusCode());
+        self::assertNotEmpty($response->getHeaderLine('Location'));
+
+        $resource = $this->get($response->getHeaderLine('Location'));
+        self::assertSame('Foo', $resource['title']);
+    }
+
+    /**
+     * @test
+     */
+    public function multipleResourcesCanBeCreatedViaSingleRestCall()
+    {
+        $response = $this->createResources([
+            ['title' => 'Foo'],
+            ['title' => 'Bar'],
+            ['title' => 'Baz']
+        ]);
+        self::assertSame(201, $response->getStatusCode(), $response->getBody()->getContents());
+        self::assertNotEmpty($response->getHeaderLine('Location'));
+
+        $resources = $this->get($response->getHeaderLine('Location') . '?cursor=title');
+        self::assertSame('Bar', $resources[0]['title']);
+        self::assertSame('Baz', $resources[1]['title']);
+        self::assertSame('Foo', $resources[2]['title']);
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeCreatedWithSubEntitiesViaRestCall()
+    {
+        $response = $this->createResource([
+            'title' => 'Foo',
+            'entities' => [
+                [ 'title' => 'Bar' ]
+            ]
+        ]);
+        self::assertSame(201, $response->getStatusCode());
+        self::assertNotEmpty($response->getHeaderLine('Location'));
+
+        $resource = $this->get($response->getHeaderLine('Location'));
+        self::assertSame('Bar', $resource['entities'][0]['title']);
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeCreatedWithPredefinedIdentifierViaRestCall()
+    {
+        $arguments = [
+            'resource' => [
+                'title' => 'Foo',
+            ]
+        ];
+        $response = $this->browser->request($this->uriFor('aggregate/e413ed09-bd63-4a4e-9e0a-026f9179a2c1'), 'POST', $arguments);
+        self::assertSame(201, $response->getStatusCode());
+        self::assertStringEndsWith('e413ed09-bd63-4a4e-9e0a-026f9179a2c1', $response->getHeaderLine('Location'));
+
+        $resource = $this->get($response->getHeaderLine('Location'));
+        self::assertSame('Foo', $resource['title']);
+        self::assertSame('e413ed09-bd63-4a4e-9e0a-026f9179a2c1', $resource['uuid']);
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeCreatedViaJsonRestCall()
+    {
+        $jsonBody = json_encode([
+            'resource' => [
+                'title' => 'Foo',
+            ]
+        ]);
+        $response = $this->browser->request($this->uriFor('aggregate'), 'POST', [], [], ['HTTP_CONTENT_TYPE' => 'application/json'], $jsonBody);
+
+        self::assertSame(201, $response->getStatusCode());
+        self::assertNotEmpty($response->getHeaderLine('Location'));
+
+        $resource = $this->get($response->getHeaderLine('Location'));
+        self::assertSame('Foo', $resource['title']);
+    }
+
+    /**
+     * @test
+     */
+    public function resourceCanBeUpdatedViaRestCall()
+    {
+        $response = $this->createResource([
+            'title' => 'Foo'
+        ]);
+        $resourceUri = $response->getHeaderLine('Location');
+
+        $arguments = [
+            'resource' => [
+                'title' => 'Bar'
+            ]
+        ];
+        $response = $this->browser->request($resourceUri, 'PUT', $arguments);
+        self::assertSame(200, $response->getStatusCode());
+        self::assertEmpty($response->getBody()->getContents());
+
+        $resource = $this->get($response->getHeaderLine('Location'));
+        self::assertSame('Bar', $resource['title']);
+    }
+
+    /**
+     * @test
+     */
+    public function resourceCanBeDeletedViaRestCall()
+    {
+        $response = $this->createResource([
+            'title' => 'Foo'
+        ]);
+        $resourceUri = $response->getHeaderLine('Location');
+
+        $response = $this->browser->request($resourceUri, 'DELETE');
+        self::assertSame(204, $response->getStatusCode());
+        self::assertEmpty($response->getBody()->getContents());
+        $this->persistenceManager->clearState();
+
+        $response = $this->browser->request($resourceUri, 'GET');
+        self::assertSame(404, $response->getStatusCode());
+    }
+
+    /**
+     * @test
+     */
+    public function resourceReturnedWillRespectAggregateBoundariesByDefault()
+    {
+        $arguments = [
+            'resource' => [
+                'title' => 'Foo',
+            ]
+        ];
+        $this->browser->request($this->uriFor('aggregate/e413ed09-bd63-4a4e-9e0a-026f9179a2c1'), 'POST', $arguments);
+
+        $response = $this->createResource([
+            'title' => 'Bar',
+            'otherAggregate' => 'e413ed09-bd63-4a4e-9e0a-026f9179a2c1'
+        ]);
+
+        $resource = $this->get($response->getHeaderLine('Location'));
+        self::assertFalse(isset($resource['otherAggregate']['title']));
+    }
+
+    /**
+     * @test
+     */
+    public function resourceCanBeDescribedViaRestCall()
+    {
+        $expected = [
+            'title' => [
+                'type' => 'string',
+                'elementType' => NULL,
+                'transient' => false,
+                'identity' => false,
+                'multiValued' => false,
+            ],
+            'email' => [
+                'type' => 'string',
+                'elementType' => NULL,
+                'transient' => false,
+                'identity' => false,
+                'multiValued' => false,
+            ],
+            'entities' => [
+                'type' => 'Collection',
+                'elementType' => 'Entity',
+                'transient' => false,
+                'identity' => false,
+                'multiValued' => true,
+                'schema' => [
+                    'title' => [
+                        'type' => 'string',
+                        'elementType' => NULL,
+                        'transient' => false,
+                        'identity' => false,
+                        'multiValued' => false,
+                    ],
+                    'entities' => [
+                        'type' => 'Collection',
+                        'elementType' => 'Entity',
+                        'transient' => false,
+                        'identity' => false,
+                        'multiValued' => true,
+                        'schema' => 'Entity',
+                    ],
+                    'uuid' => [
+                        'type' => 'string',
+                        'elementType' => NULL,
+                        'transient' => false,
+                        'identity' => true,
+                        'multiValued' => false,
+                    ],
+                ],
+            ],
+            'otherAggregate' => [
+                'type' => 'AggregateRoot',
+                'elementType' => NULL,
+                'transient' => false,
+                'identity' => false,
+                'multiValued' => false,
+                'schema' => 'AggregateRoot',
+            ],
+            'uuid' => [
+                'type' => 'string',
+                'elementType' => NULL,
+                'transient' => false,
+                'identity' => true,
+                'multiValued' => false,
+            ],
+        ];
+
+        $description = $this->get($this->uriFor('aggregate/describe'));
+        self::assertThat($expected, self::identicalTo($description), 'The received entity description was: ' . var_export($description, true));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeListedWithPagination()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate?limit=2&cursor=title'));
+        self::assertThat(count($results), self::identicalTo(2));
+        self::assertThat($results[0]['title'], self::identicalTo('Bar'));
+        self::assertThat($results[1]['title'], self::identicalTo('Baz'));
+
+        $results = $this->get($this->uriFor('aggregate?limit=2&cursor=title&last=Baz'));
+        self::assertThat(count($results), self::identicalTo(1));
+        self::assertThat($results[0]['title'], self::identicalTo('Foo'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeListedWithCursorPaginationByDefault()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz'
+        ];
+        $identity = 1;
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                '__identity' => 'e413ed09-bd63-4a4e-9e0a-026f9179a2c' . $identity++,
+                'title' => $title
+            ]);
+        }
+
+        $response = $this->browser->request($this->uriFor('aggregate?limit=2'), 'GET');
+        self::assertSame(200, $response->getStatusCode());
+        $results = json_decode($response->getBody()->getContents(), true);
+        self::assertThat(count($results), self::identicalTo(2));
+        self::assertThat($results[0]['title'], self::identicalTo('Foo'));
+        self::assertThat($results[1]['title'], self::identicalTo('Bar'));
+
+        $links = new LinkHeader($response->getHeader('Link'));
+        $next = $links->getNext();
+        self::assertNotNull($next);
+
+        $results = $this->get($next);
+        self::assertThat(count($results), self::identicalTo(1));
+        self::assertThat($results[0]['title'], self::identicalTo('Baz'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesListReturnsPaginationLinkInHeader()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title
+            ]);
+        }
+
+        $response = $this->browser->request($this->uriFor('aggregate?limit=2&cursor=title'), 'GET');
+
+        $links = new LinkHeader($response->getHeader('Link'));
+        self::assertNotNull($links->getPrev());
+        $next = $links->getNext();
+        self::assertNotNull($next);
+
+        $results = $this->get($next);
+        self::assertThat(count($results), self::identicalTo(1));
+        self::assertThat($results[0]['title'], self::identicalTo('Foo'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeFiltered()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/filter?title=F%'));
+        self::assertThat(count($results), self::identicalTo(1));
+        self::assertThat($results[0]['title'], self::identicalTo('Foo'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBePaginatedWithOffsetAndLimitInFilter()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/filter?limit=1&offset=1'));
+        self::assertThat(count($results), self::identicalTo(1));
+        self::assertThat($results[0]['title'], self::identicalTo('Bar'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeSortedInFilter()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/filter?sort=title'));
+        self::assertThat(count($results), self::identicalTo(3));
+        self::assertThat($results[0]['title'], self::identicalTo('Bar'));
+        self::assertThat($results[1]['title'], self::identicalTo('Baz'));
+        self::assertThat($results[2]['title'], self::identicalTo('Foo'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeSortedBackwardsInFilter()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/filter?sort=-title'));
+        self::assertThat(count($results), self::identicalTo(3));
+        self::assertThat($results[0]['title'], self::identicalTo('Foo'));
+        self::assertThat($results[1]['title'], self::identicalTo('Baz'));
+        self::assertThat($results[2]['title'], self::identicalTo('Bar'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeSearchedByQuery()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz', 'Bux'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/search?query=Ba&sort=title'));
+        self::assertTrue(isset($results['results']));
+        self::assertThat(count($results['results']), self::identicalTo(2));
+        self::assertThat($results['results'][0]['title'], self::identicalTo('Bar'));
+        self::assertThat($results['results'][1]['title'], self::identicalTo('Baz'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeSearchedByQueryWithQuotedString()
+    {
+        $resourceTitles = [
+            'Foo Bar', 'Bar Bar', 'Baz Bar', 'Bux Bar'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/search?query='.urlencode('"r Bar"')));
+        self::assertTrue(isset($results['results']));
+        self::assertThat(count($results['results']), self::identicalTo(1));
+        self::assertThat($results['results'][0]['title'], self::identicalTo('Bar Bar'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeSearchedByQueryWithinSubEntities()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz', 'Bux'
+        ];
+        $count = 0;
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => 'Aggregate ' . ++$count,
+                'entities' => [
+                    [ 'title' => $title ]
+                ]
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/search?query=Ba&sort=title'));
+        self::assertTrue(isset($results['results']));
+        self::assertThat(count($results['results']), self::identicalTo(2));
+        self::assertThat($results['results'][0]['title'], self::identicalTo('Aggregate 2'));
+        self::assertThat($results['results'][1]['title'], self::identicalTo('Aggregate 3'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeSearchedByQueryWithSimpleBooleanLogic()
+    {
+        $resourceTitles = [
+            'Foo Bar', 'Bar Bar', 'Baz Bar', 'Bux Bar'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title,
+                'email' => '',
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/search?query='.urlencode('Bar +Foo')));
+        self::assertTrue(isset($results['results']));
+        self::assertThat(count($results['results']), self::identicalTo(1));
+        self::assertSame('Foo Bar', $results['results'][0]['title']);
+
+        $results = $this->get($this->uriFor('aggregate/search?query='.urlencode('Bar -Foo').'&sort=title'));
+        self::assertTrue(isset($results['results']));
+        self::assertThat(count($results['results']), self::identicalTo(3));
+        self::assertThat($results['results'][0]['title'], self::identicalTo('Bar Bar'));
+        self::assertThat($results['results'][1]['title'], self::identicalTo('Baz Bar'));
+        self::assertThat($results['results'][2]['title'], self::identicalTo('Bux Bar'));
+    }
+
+    /**
+     * see ResourceRepository::findBySearch(...) and https://jira.neos.io/browse/FLOW-462
+     *
+     * @test
+     */
+    public function logicalNotQueryWorksCorrectlyOnNullFields()
+    {
+        $resourceTitles = [
+            'Foo Bar', 'Bar Bar', 'Baz Bar'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title,
+                'email' => null
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/search?query='.urlencode('Bar -Foo').'&sort=title'));
+        self::assertTrue(isset($results['results']));
+        self::assertThat(count($results['results']), self::identicalTo(2));
+        self::assertThat($results['results'][0]['title'], self::identicalTo('Bar Bar'));
+        self::assertThat($results['results'][1]['title'], self::identicalTo('Baz Bar'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesCanBeSearchedWithinSpecificPropertiesOnly()
+    {
+        $resourceTitles = [
+            'Foo', 'Bar', 'Baz', 'Bux'
+        ];
+        foreach ($resourceTitles as $title) {
+            $this->createResource([
+                'title' => $title,
+                'email' => 'bar@trackmyrace.com'
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('aggregate/search?query=Ba&search=title&sort=title'));
+        self::assertTrue(isset($results['results']));
+        self::assertThat(count($results['results']), self::identicalTo(2));
+        self::assertThat($results['results'][0]['title'], self::identicalTo('Bar'));
+        self::assertThat($results['results'][1]['title'], self::identicalTo('Baz'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourcesDefaultFilterIsAppliedInAllQueryActions()
+    {
+        $resourceEmails = [
+            'a@trackmyrace.com', 'b@trackmyrace.com', 'c@mandigo.de'
+        ];
+        foreach ($resourceEmails as $email) {
+            $this->createResource([
+                'title' => 'Foo',
+                'email' => $email
+            ]);
+        }
+
+        $results = $this->get($this->uriFor('filteredaggregate?cursor=email'));
+        self::assertThat(count($results), self::identicalTo(2));
+        self::assertThat($results[0]['email'], self::identicalTo('a@trackmyrace.com'));
+        self::assertThat($results[1]['email'], self::identicalTo('b@trackmyrace.com'));
+
+        $results = $this->get($this->uriFor('filteredaggregate/filter?cursor=email'));
+        self::assertThat(count($results), self::identicalTo(2));
+        self::assertThat($results[0]['email'], self::identicalTo('a@trackmyrace.com'));
+        self::assertThat($results[1]['email'], self::identicalTo('b@trackmyrace.com'));
+    }
+
+    /**
+     * @test
+     */
+    public function resourceRenderingCanBeConfiguredViaRenderConfigurationProperty()
+    {
+        $this->createResource([
+            'title' => 'Foo',
+            'email' => 'test@trackmyrace.com',
+            'entities' => [
+                ['title' => 'Bar']
+            ]
+        ]);
+
+        $results = $this->get($this->uriFor('filteredaggregate'));
+        self::assertFalse(isset($results[0]['entities']), 'Subentities are included');
+    }
+
+    /**
+     * @test
+     */
+    public function resourceRenderingConfiguredViaFieldsArgumentIsRestrictedByRenderConfigurationProperty()
+    {
+        $this->createResource([
+            'title' => 'Foo',
+            'email' => 'test@trackmyrace.com',
+            'entities' => [
+                ['title' => 'Bar']
+            ]
+        ]);
+
+        $results = $this->get($this->uriFor('filteredaggregate?fields=title,email,entities'));
+        self::assertFalse(isset($results[0]['entities']), 'Subentities are included');
+    }
+
+    /**
+     * @test
+     */
+    public function resourceRenderingCanBeConfiguredViaFieldsArgument()
+    {
+        $this->createResource([
+            'title' => 'Foo',
+            'email' => 'test@trackmyrace.com',
+            'entities' => [
+                ['title' => 'Bar']
+            ]
+        ]);
+
+        $results = $this->get($this->uriFor('aggregate?fields=title,email'));
+        self::assertFalse(isset($results[0]['entities']), 'Subentities are included');
+    }
+
+    /**
+     * @test
+     */
+    public function nonExistingResourcesResultIn404JsonError()
+    {
+        $response = $this->browser->request($this->uriFor('aggregate/12345678'), 'GET');
+        self::assertSame(404, $response->getStatusCode());
+        self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
+        self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
+
+        $error = json_decode($response->getBody()->getContents(), true);
+        self::assertTrue(isset($error['code']), 'Error code is not set');
+        self::assertTrue(isset($error['message']), 'Error message is not set');
+        self::assertTrue(isset($error['reference']), 'Error reference is not set');
+    }
+
+    /**
+     * @test
+     */
+    public function propertyMappingErrorsResultIn500JsonError()
+    {
+        $response = $this->createResource(['nonExistingProperty' => 'Foo Bar!']);
+        self::assertSame(500, $response->getStatusCode());
+        self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
+        self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
+
+        $error = json_decode($response->getBody()->getContents(), true);
+        self::assertTrue(isset($error['code']), 'Error code is not set');
+        self::assertTrue(isset($error['message']), 'Error message is not set');
+        self::assertTrue(isset($error['reference']), 'Error reference is not set');
+    }
+
+    /**
+     * @test
+     */
+    public function validationErrorsResultIn422JsonError()
+    {
+        $response = $this->createResource(['email' => 'Foo Bar!']);
+        self::assertSame(422, $response->getStatusCode());
+        self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
+        self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
+
+        $error = json_decode($response->getBody()->getContents(), true);
+        self::assertTrue(isset($error['message']), 'Error message is not set');
+        self::assertTrue(isset($error['errors']), 'Error property sub-errors are not set');
+    }
+
+    /**
+     * @test
+     */
+    public function exceptionsInTheApplicationCanReturnCustomStatusCodeJsonError()
+    {
+        $response = $this->browser->request($this->uriFor('aggregate/exceptional'), 'GET');
+        self::assertSame(9001, $response->getStatusCode());
+        self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
+        self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
+
+        $error = json_decode($response->getBody()->getContents(), true);
+        self::assertTrue(isset($error['code']), 'Error code is not set');
+        self::assertTrue(isset($error['message']), 'Error message is not set');
+        self::assertTrue(isset($error['reference']), 'Error reference is not set');
+    }
 }
