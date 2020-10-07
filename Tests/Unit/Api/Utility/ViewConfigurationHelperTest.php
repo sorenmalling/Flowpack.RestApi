@@ -63,7 +63,7 @@ class ViewConfigurationHelperTest extends \Neos\Flow\Tests\UnitTestCase
     public function convertPropertyPathsToViewConfigurationWorksAsExpected($input, $expected)
     {
         $output = $this->helper->convertPropertyPathsToViewConfiguration($input);
-        $this->assertThat($output, $this->equalTo($expected));
+        self::assertThat($output, self::identicalTo($expected));
     }
 
     /**
@@ -184,6 +184,6 @@ class ViewConfigurationHelperTest extends \Neos\Flow\Tests\UnitTestCase
     public function convertAggregateSchemaToViewConfigurationWorksAsExpected($input, $expected)
     {
         $output = $this->helper->convertAggregateSchemaToViewConfiguration($input);
-        $this->assertThat($output, $this->equalTo($expected));
+        self::assertThat($output, self::identicalTo($expected));
     }
 }
