@@ -91,7 +91,7 @@ class AggregateReflectionHelperTest extends \Neos\Flow\Tests\UnitTestCase
 				'schema' => $entitySchema,
 			],
 		];
-		$this->assertThat($output, $this->equalTo($expected));
+		self::assertThat($output, self::identicalTo($expected));
 	}
 
 	/**
@@ -145,6 +145,6 @@ class AggregateReflectionHelperTest extends \Neos\Flow\Tests\UnitTestCase
 				'schema' => $entitySchema,
 			],
 		];
-		$this->assertThat($output, $this->equalTo($expected));
+		self::assertThat($output, self::identicalTo($expected));
 	}
 }
