@@ -25,7 +25,7 @@ abstract class AbstractEntryController extends \Neos\Flow\Mvc\Controller\ActionC
 	/**
 	 * @var array
 	 */
-	protected $supportedMediaTypes = array('application/json');
+	protected $supportedMediaTypes = ['application/json'];
 
 	/**
 	 * @Flow\Inject
@@ -73,7 +73,7 @@ abstract class AbstractEntryController extends \Neos\Flow\Mvc\Controller\ActionC
 	public function indexAction()
 	{
 		$apiControllers = $this->reflectionService->getAllSubClassNamesForClass(AbstractRestController::class);
-		$apiEntryPoints = array();
+		$apiEntryPoints = [];
 		$currentClassReflection = new ClassReflection($this);
 		$currentNamespace = $currentClassReflection->getNamespaceName();
 
@@ -86,19 +86,19 @@ abstract class AbstractEntryController extends \Neos\Flow\Mvc\Controller\ActionC
 			$controllerDescription = $controllerReflection->getDescription();
 			$simpleControllerName = substr($controllerName, strrpos($controllerName, '\\') + 1);
 			$resourceName = strtolower(str_replace('Controller', '', $simpleControllerName));
-			$resourceUri = $this->uriBuilder->setCreateAbsoluteUri($this->useAbsoluteUris)->setFormat($this->request->getFormat())->uriFor('discover', array(), $resourceName);
+			$resourceUri = $this->uriBuilder->setCreateAbsoluteUri($this->useAbsoluteUris)->setFormat($this->request->getFormat())->uriFor('discover', [], $resourceName);
 			$resourceType = call_user_func($controllerName . '::resourceType');
-			$apiEntryPoints[$resourceName] = array(
+			$apiEntryPoints[$resourceName] = [
 				'uri' => $resourceUri,
 				'resourceType' => $this->normalizeResourceTypes ? ResourceTypeHelper::normalize($resourceType) : $resourceType,
 				'description' => $controllerDescription
-			);
+			];
 		}
 
-		$response = array(
+		$response = [
 			'apiVersion' => static::$REST_API_VERSION,
 			'entrypoints' => $apiEntryPoints
-		);
+		];
 		$this->view->assign('value', $response);
 	}
 }
