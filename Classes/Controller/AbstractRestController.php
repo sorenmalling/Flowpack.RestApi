@@ -95,7 +95,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	/**
 	 * @var array
 	 */
-	protected $supportedMediaTypes = array('application/json');
+	protected $supportedMediaTypes = ['application/json'];
 
 	protected static $RESOURCE_ARGUMENT_NAME = 'resource';
 
@@ -142,7 +142,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	 *
 	 * @var array
 	 */
-	protected $resourceEntityDefaultFilter = array();
+	protected $resourceEntityDefaultFilter = [];
 
 	/**
 	 * @var ResourceRepository
@@ -206,16 +206,16 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	protected function getFlattenedValidationErrorMessage()
 	{
 		$outputMessage = 'Validation failed while trying to call ' . get_class($this) . '->' . $this->actionMethodName . '().' . PHP_EOL;
-		$errorObject = array(
+		$errorObject = [
 			'message' => $outputMessage,
-		);
+		];
 		$logMessage = $outputMessage;
 
 		foreach ($this->arguments->getValidationResults()->getFlattenedErrors() as $propertyPath => $errors) {
 			/* @var $error Error */
 			foreach ($errors as $error) {
 				$logMessage .= 'Error for ' . $propertyPath . ':  ' . $error->render() . PHP_EOL;
-				$errorObject['errors'][] = array('code' => $error->getCode(), 'field' => $propertyPath, 'message' => $error->render());
+				$errorObject['errors'][] = ['code' => $error->getCode(), 'field' => $propertyPath, 'message' => $error->render()];
 			}
 		}
 		$this->logger->error($logMessage, $errorObject);
@@ -243,7 +243,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 		$result['showAction'][static::$RESOURCE_ARGUMENT_NAME] =
 		$result['createAction'][static::$RESOURCE_ARGUMENT_NAME] =
 		$result['updateAction'][static::$RESOURCE_ARGUMENT_NAME] =
-		$result['removeAction'][static::$RESOURCE_ARGUMENT_NAME] = array(
+		$result['removeAction'][static::$RESOURCE_ARGUMENT_NAME] = [
 			'position' => 0,
 			'optional' => false,
 			'type' => static::$RESOURCE_ENTITY_CLASS,
@@ -252,11 +252,11 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			'byReference' => false,
 			'allowsNull' => false,
 			'defaultValue' => null
-		);
+		];
 		$result['createAction'][static::$RESOURCE_ARGUMENT_NAME]['optional'] = true;
 
 		static::$RESOURCES_ARGUMENT_NAME = Inflector::pluralize(static::$RESOURCE_ARGUMENT_NAME);
-		$result['createAction'][static::$RESOURCES_ARGUMENT_NAME] = array(
+		$result['createAction'][static::$RESOURCES_ARGUMENT_NAME] = [
 			'position' => 1,
 			'optional' => true,
 			'type' => 'array<' . static::$RESOURCE_ENTITY_CLASS . '>',
@@ -264,11 +264,11 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			'array' => true,
 			'byReference' => false,
 			'allowsNull' => false,
-			'defaultValue' => array()
-		);
+			'defaultValue' => []
+		];
 
 		$result['searchAction'][static::$SORTING_ARGUMENT_NAME] =
-		$result['filterAction'][static::$SORTING_ARGUMENT_NAME] = array(
+		$result['filterAction'][static::$SORTING_ARGUMENT_NAME] = [
 			'position' => 0,
 			'optional' => true,
 			'type' => 'string',
@@ -277,11 +277,11 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			'byReference' => false,
 			'allowsNull' => true,
 			'defaultValue' => null
-		);
+		];
 		$result['searchAction'][static::$LIMIT_ARGUMENT_NAME] =
 		$result['searchAction'][static::$OFFSET_ARGUMENT_NAME] =
 		$result['filterAction'][static::$LIMIT_ARGUMENT_NAME] =
-		$result['filterAction'][static::$OFFSET_ARGUMENT_NAME] = array(
+		$result['filterAction'][static::$OFFSET_ARGUMENT_NAME] = [
 			'position' => 0,
 			'optional' => true,
 			'type' => 'integer',
@@ -290,12 +290,12 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			'byReference' => false,
 			'allowsNull' => true,
 			'defaultValue' => null
-		);
+		];
 
 		$result['showAction'][static::$RENDER_FIELDS_ARGUMENT_NAME] =
 		$result['listAction'][static::$RENDER_FIELDS_ARGUMENT_NAME] =
 		$result['searchAction'][static::$RENDER_FIELDS_ARGUMENT_NAME] =
-		$result['filterAction'][static::$RENDER_FIELDS_ARGUMENT_NAME] = array(
+		$result['filterAction'][static::$RENDER_FIELDS_ARGUMENT_NAME] = [
 			'position' => 0,
 			'optional' => true,
 			'type' => 'string',
@@ -304,12 +304,12 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			'byReference' => false,
 			'allowsNull' => true,
 			'defaultValue' => null
-		);
+		];
 
 		$result['showAction'][static::$EMBED_ARGUMENT_NAME] =
 		$result['listAction'][static::$EMBED_ARGUMENT_NAME] =
 		$result['searchAction'][static::$EMBED_ARGUMENT_NAME] =
-		$result['filterAction'][static::$EMBED_ARGUMENT_NAME] = array(
+		$result['filterAction'][static::$EMBED_ARGUMENT_NAME] = [
 			'position' => 0,
 			'optional' => true,
 			'type' => 'string',
@@ -318,7 +318,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			'byReference' => false,
 			'allowsNull' => true,
 			'defaultValue' => null
-		);
+		];
 		return $result;
 	}
 
@@ -361,57 +361,59 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	 */
 	protected function initializeView(\Neos\Flow\Mvc\View\ViewInterface $view)
 	{
-		if ($view instanceof JsonView) {
-			$view->setOption('jsonEncodingOptions', JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-			// Build default descend configuration based on aggregate boundaries
-			$descendConfiguration = static::resourceEntityDescendConfiguration($this->objectManager);
-			if ($this->request->hasArgument(static::$EMBED_ARGUMENT_NAME)) {
-				/* @var $configurationHelper ViewConfigurationHelper */
-				$configurationHelper = $this->objectManager->get(ViewConfigurationHelper::class);
-				$embedPaths = $this->request->getArgument(static::$EMBED_ARGUMENT_NAME);
-				// Build descend configuration based on submitted embed argument
-				$embedDescendConfiguration = $configurationHelper->convertPropertyPathsToViewConfiguration($embedPaths);
-				// And merge it into the default descend configuration
-				$descendConfiguration = array_merge_recursive($descendConfiguration, $embedDescendConfiguration);
-			}
-			$configuration = array(
-				'_descend'                    => $descendConfiguration,
-				'_exposeObjectIdentifier'     => true,
-				'_exposedObjectIdentifierKey' => static::$RESOURCE_ENTITY_IDENTIFIER,
-			);
-			if (is_array($this->resourceEntityRenderConfiguration)) {
-				$configuration['_only'] = $this->resourceEntityRenderConfiguration;
-			}
-
-			if ($this->request->hasArgument(static::$RENDER_FIELDS_ARGUMENT_NAME)) {
-				$fields = explode(',', $this->request->getArgument(static::$RENDER_FIELDS_ARGUMENT_NAME));
-				$only = array_filter($fields, function($field) {
-					return $field[0] !== '!';
-				});
-				if ($only !== array()) {
-					if (isset($configuration['_only'])) {
-						$configuration['_only'] = array_intersect($configuration['_only'], $only);
-					} else {
-						$configuration['_only'] = $only;
-					}
-				}
-
-				$exclude = array_filter($fields, function($field) {
-					return $field[0] === '!';
-				});
-				if ($exclude !== array()) {
-					$configuration['_exclude'] = array_map(function($field) {
-						return substr($field, 1);
-					}, $exclude);
-				}
-			}
-
-			$this->resourceEntityConfiguration = $configuration;
-			$view->setConfiguration(array(
-				'value'  => $configuration,
-				'values' => array('_descendAll' => $configuration)
-			));
+		if (!($view instanceof JsonView)) {
+			return;
 		}
+
+		$view->setOption('jsonEncodingOptions', JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+		// Build default descend configuration based on aggregate boundaries
+		$descendConfiguration = static::resourceEntityDescendConfiguration($this->objectManager);
+		if ($this->request->hasArgument(static::$EMBED_ARGUMENT_NAME)) {
+			/* @var $configurationHelper ViewConfigurationHelper */
+			$configurationHelper = $this->objectManager->get(ViewConfigurationHelper::class);
+			$embedPaths = $this->request->getArgument(static::$EMBED_ARGUMENT_NAME);
+			// Build descend configuration based on submitted embed argument
+			$embedDescendConfiguration = $configurationHelper->convertPropertyPathsToViewConfiguration($embedPaths);
+			// And merge it into the default descend configuration
+			$descendConfiguration = array_merge_recursive($descendConfiguration, $embedDescendConfiguration);
+		}
+		$configuration = [
+			'_descend'                    => $descendConfiguration,
+			'_exposeObjectIdentifier'     => true,
+			'_exposedObjectIdentifierKey' => static::$RESOURCE_ENTITY_IDENTIFIER,
+		];
+		if (is_array($this->resourceEntityRenderConfiguration)) {
+			$configuration['_only'] = $this->resourceEntityRenderConfiguration;
+		}
+
+		if ($this->request->hasArgument(static::$RENDER_FIELDS_ARGUMENT_NAME)) {
+			$fields = explode(',', $this->request->getArgument(static::$RENDER_FIELDS_ARGUMENT_NAME));
+			$only = array_filter($fields, static function($field) {
+				return $field[0] !== '!';
+			});
+			if ($only !== []) {
+				if (isset($configuration['_only'])) {
+					$configuration['_only'] = array_intersect($configuration['_only'], $only);
+				} else {
+					$configuration['_only'] = $only;
+				}
+			}
+
+			$exclude = array_filter($fields, static function($field) {
+				return $field[0] === '!';
+			});
+			if ($exclude !== []) {
+				$configuration['_exclude'] = array_map(static function($field) {
+					return substr($field, 1);
+				}, $exclude);
+			}
+		}
+
+		$this->resourceEntityConfiguration = $configuration;
+		$view->setConfiguration([
+			'value'  => $configuration,
+			'values' => ['_descendAll' => $configuration]
+		]);
 	}
 
 	/**
@@ -422,8 +424,8 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	protected function setCollectionReturnValue($variableName = 'values')
 	{
 		if ($this->view instanceof JsonView) {
-			$this->view->setConfiguration(array($variableName => array('_descendAll' => $this->resourceEntityConfiguration)));
-			$this->view->setVariablesToRender(array($variableName));
+			$this->view->setConfiguration([$variableName => ['_descendAll' => $this->resourceEntityConfiguration]]);
+			$this->view->setVariablesToRender([$variableName]);
 		}
 	}
 
@@ -514,7 +516,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 		//$resourceProperties = array_diff($resourceProperties, array('Persistence_Object_Identifier'));
 		$this->view->assign('description', $resourceProperties);
 		if ($this->view instanceof JsonView) {
-			$this->view->setVariablesToRender(array('description'));
+			$this->view->setVariablesToRender(['description']);
 		}
 	}
 
@@ -524,29 +526,29 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	 */
 	public function discoverAction()
 	{
-		$resourceEntryPoints = array();
+		$resourceEntryPoints = [];
 		$actionMethodNames = static::getPublicActionMethods($this->objectManager);
 		$actionMethodParameters = static::getActionMethodParameters($this->objectManager);
 		foreach ($actionMethodNames as $actionMethodName => $isPublic) {
-			if (in_array($actionMethodName, array('discoverAction', 'optionsAction'))) {
+			if (in_array($actionMethodName, ['discoverAction', 'optionsAction'])) {
 				continue;
 			}
 			$actionName = str_replace('Action', '', $actionMethodName);
 
-			$arguments = array();
+			$arguments = [];
 			if (isset($actionMethodParameters[$actionMethodName][static::$RESOURCE_ARGUMENT_NAME])) {
 				if ($actionMethodParameters[$actionMethodName][static::$RESOURCE_ARGUMENT_NAME]['optional'] === false) {
-					$arguments = array(static::$RESOURCE_ARGUMENT_NAME => array('__identity' => '{identifier}'));
+					$arguments = [static::$RESOURCE_ARGUMENT_NAME => ['__identity' => '{identifier}']];
 				} else {
-					$arguments = array(static::$RESOURCE_ARGUMENT_NAME => array('__identity' => '({identifier})'));
+					$arguments = [static::$RESOURCE_ARGUMENT_NAME => ['__identity' => '({identifier})']];
 				}
 			}
 			// Map CRUD actions back to generic URI action
-			$uriActionName = in_array($actionName, array('show', 'list', 'create', 'update', 'remove')) ? 'index' : $actionName;
+			$uriActionName = in_array($actionName, ['show', 'list', 'create', 'update', 'remove']) ? 'index' : $actionName;
 			$actionUri = $this->uriBuilder->setCreateAbsoluteUri($this->useAbsoluteUris)->setFormat($this->request->getFormat())->uriFor($uriActionName, $arguments);
 			$actionReflection = new MethodReflection($this, $actionMethodName);
 
-			$parameterDescriptions = array();
+			$parameterDescriptions = [];
 			if ($actionReflection->isTaggedWith('param')) {
 				foreach ($actionReflection->getTagValues('param') as $parameterDescription) {
 					$descriptionParts = preg_split('/\s/', $parameterDescription, 3);
@@ -557,34 +559,34 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 				}
 			}
 
-			$parameters = array_map(function($parameterInfo) {
-				return array(
+			$parameters = array_map(static function($parameterInfo) {
+				return [
 					'required' => !$parameterInfo['optional'],
 					'type' => $this->normalizeResourceTypes ? ResourceTypeHelper::normalize($parameterInfo['type']) : $parameterInfo['type'],
 					'default' => $parameterInfo['defaultValue']
-				);
+				];
 			}, $actionMethodParameters[$actionMethodName]);
 			// PHPSadness.com: array_walk operates in place
-			array_walk($parameters, function(&$parameterInfo, $parameterName) use ($parameterDescriptions) {
-				$parameterInfo['description'] = isset($parameterDescriptions[$parameterName]) ? $parameterDescriptions[$parameterName] : '';
+			array_walk($parameters, static function(&$parameterInfo, $parameterName) use ($parameterDescriptions) {
+				$parameterInfo['description'] = $parameterDescriptions[$parameterName] ?? '';
 			});
 
 			$return = '';
 			if ($actionReflection->isTaggedWith('return')) {
 				$returnTags = $actionReflection->getTagValues('return');
 				$returnParts = preg_split('/\s/', reset($returnTags), 2);
-				$return = isset($returnParts[1]) ? $returnParts[1] : '';
+				$return = $returnParts[1] ?? '';
 			}
-			$resourceEntryPoints[$actionName] = array(
+			$resourceEntryPoints[$actionName] = [
 				'uri' => rawurldecode($actionUri),
 				'parameters' => $parameters,
 				'description' => $actionReflection->getDescription(),
 				'return' => $return,
-			);
+			];
 		}
 		$this->view->assign('description', $resourceEntryPoints);
 		if ($this->view instanceof JsonView) {
-			$this->view->setVariablesToRender(array('description'));
+			$this->view->setVariablesToRender(['description']);
 		}
 	}
 
@@ -648,7 +650,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	 */
 	protected function getPersistencePropertyPaths(array $resourceSchema, $onlySearchable = false)
 	{
-		$propertyPaths = array();
+		$propertyPaths = [];
 		foreach ($resourceSchema as $propertyName => $property) {
 			if ($property['transient']) continue;
 			/*if ($property['multiValued']) {
@@ -676,7 +678,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	 */
 	protected function getPropertyFilters(array $resourceProperties)
 	{
-		$filters = array_merge(array(), $this->resourceEntityDefaultFilter);
+		$filters = array_merge([], $this->resourceEntityDefaultFilter);
 		// Note: This work-around is necessary, because PHP converts all dots in query parameters to underscores.
 		// Since we want to use dot-notation for filtering by subproperties, we need to parse the query string ourself.
 		// See http://ca.php.net/variables.external#example-123
@@ -691,7 +693,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 				$argumentName = '__identity';
 			} elseif ($argumentName !== '__identity') {
 				$argumentName = str_replace('_', '.', $argumentName);		// TODO: Check if this is really necessary (see bedf1b210814e1e6815dca4602f05cd23830069a)
-				$argumentName = str_replace(array('.' . static::$RESOURCE_ENTITY_IDENTIFIER), '.__identity', $argumentName);
+				$argumentName = str_replace(['.' . static::$RESOURCE_ENTITY_IDENTIFIER], '.__identity', $argumentName);
 			}
 
 			if ($this->isInPersistenceSchema($argumentName, $resourceProperties)) {
@@ -708,7 +710,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	 */
 	protected function getPropertySearchFields(array $resourceProperties)
 	{
-		$filters = array();
+		$filters = [];
 		// Note: This work-around is necessary, because PHP converts all dots in query parameters to underscores.
 		// Since we want to use dot-notation for filtering by subproperties, we need to parse the query string ourself.
 		// See http://ca.php.net/variables.external#example-123
@@ -717,7 +719,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 
 		if (preg_match('/' . static::$SEARCH_FIELDS_ARGUMENT_NAME . '=([^&]*)/', $query, $matches) > 0) {
 			$search = explode(',', str_replace('.' . static::$RESOURCE_ENTITY_IDENTIFIER, '.__identity', urldecode($matches[1])));
-			$searchProperties = array();
+			$searchProperties = [];
 			foreach ($search as $searchProperty) {
 				if ($this->isInPersistenceSchema($searchProperty, $resourceProperties, true)) {
 					$searchProperties[] = $searchProperty;
@@ -737,7 +739,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	 */
 	protected function getPropertyOrderings(array $resourceProperties)
 	{
-		$orderings = array();
+		$orderings = [];
 		if ($this->request->hasArgument(static::$SORTING_ARGUMENT_NAME)) {
 			$sortColumns = explode(',', $this->request->getArgument(static::$SORTING_ARGUMENT_NAME));
 			foreach ($sortColumns as $columnName) {
@@ -806,8 +808,8 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 					$lastCursor = $lastCursor->format(\DateTime::ATOM);
 				}
 			}
-			$nextPageUri = $this->uriBuilder->setCreateAbsoluteUri(true)->uriFor('index', array('cursor' => $cursor, 'limit' => $limit, 'dir' => $dir === 'ASC' ? null : $dir, 'last' => $lastCursor, 'lastId' => $lastId !== null ? $lastIdentity : null));
-            $linkHeaders[] = sprintf('<%s>; rel="next"', $nextPageUri);
+			$nextPageUri = $this->uriBuilder->setCreateAbsoluteUri(true)->uriFor('index', ['cursor' => $cursor, 'limit' => $limit, 'dir' => $dir === 'ASC' ? null : $dir, 'last' => $lastCursor, 'lastId' => $lastId !== null ? $lastIdentity : null]);
+			$linkHeaders[] = sprintf('<%s>; rel="next"', $nextPageUri);
 		}
 		if ($firstResource) {
 			$lastIdentity = $this->persistenceManager->getIdentifierByObject($firstResource);
@@ -819,11 +821,11 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 					$lastCursor = $lastCursor->format(\DateTime::ATOM);
 				}
 			}
-			$prevPageUri = $this->uriBuilder->setCreateAbsoluteUri(true)->uriFor('index', array('cursor' => $cursor, 'limit' => $limit, 'dir' => $dir === 'ASC' ? 'DESC' : null, 'last' => $lastCursor, 'lastId' => $lastId !== null ? $lastIdentity : null));
+			$prevPageUri = $this->uriBuilder->setCreateAbsoluteUri(true)->uriFor('index', ['cursor' => $cursor, 'limit' => $limit, 'dir' => $dir === 'ASC' ? 'DESC' : null, 'last' => $lastCursor, 'lastId' => $lastId !== null ? $lastIdentity : null]);
 			$linkHeaders[] = sprintf('<%s>; rel="prev"', $prevPageUri);
 		}
 
-        $this->response->setComponentParameter(SetHeaderComponent::class, 'Link', implode(';', $linkHeaders));
+		$this->response->setComponentParameter(SetHeaderComponent::class, 'Link', implode(';', $linkHeaders));
 
 		$this->view->assign('values', $values);
 		$this->setCollectionReturnValue();
@@ -929,7 +931,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			$resourceUri = $this->uriBuilder->reset()
 				->setFormat($this->request->getFormat())
 				->setCreateAbsoluteUri(true)
-				->uriFor('index', array('resource' => $resource));
+				->uriFor('index', ['resource' => $resource]);
 			$this->response->setComponentParameter(SetHeaderComponent::class, 'Location', $resourceUri);
 			$this->view->assign('value', $resource);
 		}
@@ -999,7 +1001,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 		$searchProperties = $this->getPropertySearchFields($resourceProperties);
 
 		preg_match_all('/([-+]?"[^"]+"|[^\s]+)\s*/', $query, $matches);
-		$searchTerms = array();
+		$searchTerms = [];
 		foreach ($matches[1] as $queryToken) {
 			$type = $queryToken[0] === '+' ? '+' : ($queryToken[0] === '-' ? '-' : '*');
 			$queryToken = ltrim($queryToken, '+-');
@@ -1021,16 +1023,16 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 
 		$resources = $this->repository->findBySearch($searchTerms, $searchProperties, $orderings, $limit, $offset);
 
-		$result = array(
+		$result = [
 			'terms' => $searchTerms,
 			'fields' => $searchProperties,
 			'results' => $resources
-		);
+		];
 		$this->view->assign('result', $result);
 
 		if ($this->view instanceof JsonView) {
-			$this->view->setConfiguration(array('result' => array('results' => array('_descendAll' => $this->resourceEntityConfiguration))));
-			$this->view->setVariablesToRender(array('result'));
+			$this->view->setConfiguration(['result' => ['results' => ['_descendAll' => $this->resourceEntityConfiguration]]]);
+			$this->view->setVariablesToRender(['result']);
 		}
 	}
 
