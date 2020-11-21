@@ -56,8 +56,13 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 	{
 		$response = $this->browser->request($uri, 'GET');
 		self::assertSame(200, $response->getStatusCode());
-		self::assertNotEmpty($response->getBody()->getContents());
-		return json_decode($response->getBody()->getContents(), true);
+		$body = $response->getBody()->getContents();
+		self::assertNotEmpty($body);
+		$parsedBody = json_decode($body, true);
+		if ($parsedBody === null) {
+			throw new \Exception('Invalid JSON body returned. Got "' . $body . '".');
+		}
+		return $parsedBody;
 	}
 
 	/**
