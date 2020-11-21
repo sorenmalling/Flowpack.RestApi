@@ -23,7 +23,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+    - name: Extract package name from repository
+      run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
       shell: bash
 
     - name: Setup PHP, with composer and extensions
@@ -52,7 +53,7 @@ jobs:
       run: |
         git clone https://github.com/neos/flow-base-distribution.git -b ${{ matrix.flow-versions }} ${FLOW_FOLDER}
         cd ${FLOW_FOLDER}
-        composer install --prefer-dist --no-interaction --no-progress
+        composer update --prefer-dist --no-interaction --no-progress
 
     - name: Install package
       run: |
