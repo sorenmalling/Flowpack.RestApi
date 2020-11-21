@@ -184,6 +184,6 @@ class ViewConfigurationHelperTest extends \Neos\Flow\Tests\UnitTestCase
 	public function convertAggregateSchemaToViewConfigurationWorksAsExpected($input, $expected)
 	{
 		$output = $this->helper->convertAggregateSchemaToViewConfiguration($input);
-		self::assertThat($output, self::identicalTo($expected));
+		self::assertThat($output, self::assertEqualsCanonicalizing($expected));
 	}
 }
