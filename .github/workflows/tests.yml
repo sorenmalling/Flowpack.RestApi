@@ -23,6 +23,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - run: echo ::set-env name=REPOSITORY_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")
+      shell: bash
+
     - name: Setup PHP, with composer and extensions
       uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
       with:
@@ -54,16 +57,16 @@ jobs:
     - name: Install package
       run: |
         cd ${FLOW_FOLDER} 
-        composer config repositories.restapi path ../Flowpack.RestApi
+        composer config repositories.restapi path ../${REPOSITORY_NAME}
         composer config minimum-stability dev
         composer require --no-interaction --no-progress flowpack/rest-api:*
 
     - name: Run Unit tests
       run: | 
         cd ${FLOW_FOLDER} 
-        bin/phpunit --colors -c Build/BuildEssentials/PhpUnit/UnitTests.xml Packages/Application/Flowpack.RestApi/Tests/Unit
+        bin/phpunit --colors -c Build/BuildEssentials/PhpUnit/UnitTests.xml Packages/Application/${REPOSITORY_NAME}/Tests/Unit
       
     - name: Run Functional tests
       run: |
         cd ${FLOW_FOLDER} 
-        bin/phpunit --colors -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml Packages/Application/Flowpack.RestApi/Tests/Functional/*
+        bin/phpunit --colors -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml Packages/Application/${REPOSITORY_NAME}/Tests/Functional/*
