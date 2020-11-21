@@ -8,17 +8,17 @@ on:
 
 jobs:
   build:
-    env:     
-      FLOW_TARGET_VERSION: 6.3
+    env:
       FLOW_CONTEXT: Testing
       FLOW_FOLDER: ../flow-base-distribution
 
     runs-on: ubuntu-latest
-    name: PHP ${{ matrix.php-versions }}
+    name: PHP ${{ matrix.php-versions }} | Flow ${{ matrix.flow-versions }}
     strategy:
       fail-fast: false
       matrix:
         php-versions: ['7.3', '7.4']
+        flow-versions: ['6.3']
 
     steps:
     - uses: actions/checkout@v2
@@ -50,7 +50,7 @@ jobs:
 
     - name: Prepare Flow distribution
       run: |
-        git clone https://github.com/neos/flow-base-distribution.git -b ${FLOW_TARGET_VERSION} ${FLOW_FOLDER}
+        git clone https://github.com/neos/flow-base-distribution.git -b ${{ matrix.flow-versions }} ${FLOW_FOLDER}
         cd ${FLOW_FOLDER}
         composer install --prefer-dist --no-interaction --no-progress
 
