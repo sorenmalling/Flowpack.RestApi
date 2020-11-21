@@ -14,20 +14,36 @@ jobs:
       FLOW_FOLDER: ../flow-base-distribution
 
     runs-on: ubuntu-latest
+    name: PHP ${{ matrix.php-versions }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php-versions: ['7.3', '7.4']
 
     steps:
     - uses: actions/checkout@v2
 
+    - name: Setup PHP, with composer and extensions
+      uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
+      with:
+        php-version: ${{ matrix.php-versions }}
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql
+        coverage: xdebug #optional
+
     - name: Update Composer
       run: |
-        sudo composer self-update
+        composer self-update
         composer --version
 
-    - name: Cache dependencies
-      uses: actions/cache@v1
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+    - name: Cache composer dependencies
+      uses: actions/cache@v2
       with:
-        path: ~/.composer/cache
-        key: dependencies-composer-${{ hashFiles('composer.json') }}
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+        restore-keys: ${{ runner.os }}-composer-
 
     - name: Prepare Flow distribution
       run: |
@@ -39,8 +55,7 @@ jobs:
       run: |
         cd ${FLOW_FOLDER} 
         composer config repositories.restapi path ../Flowpack.RestApi
-        composer config minimum-stability dev
-        composer require --no-interaction --no-progress flowpack/restapi:dev-master
+        composer require --no-interaction --no-progress flowpack/restapi:*
 
     - name: Run Unit tests
       run: | 
