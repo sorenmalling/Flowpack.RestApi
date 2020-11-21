@@ -55,6 +55,7 @@ jobs:
       run: |
         cd ${FLOW_FOLDER} 
         composer config repositories.restapi path ../Flowpack.RestApi
+        composer config minimum-stability dev
         composer require --no-interaction --no-progress flowpack/rest-api:*
 
     - name: Run Unit tests
