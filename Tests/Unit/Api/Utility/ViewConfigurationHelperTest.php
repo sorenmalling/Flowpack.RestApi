@@ -179,7 +179,7 @@ class ViewConfigurationHelperTest extends \Neos\Flow\Tests\UnitTestCase
 		self::assertEquals([], array_diff_key($actual, $expected));
 		foreach ($expected as $key => $value) {
 			if (is_array($value)) {
-				self::assertArraySimilar($value, $actual[$key]);
+				self::assertArrayEquals($value, $actual[$key]);
 			} else {
 				self::assertContains($value, $actual);
 			}
