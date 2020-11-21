@@ -55,7 +55,7 @@ jobs:
       run: |
         cd ${FLOW_FOLDER} 
         composer config repositories.restapi path ../Flowpack.RestApi
-        composer require --no-interaction --no-progress flowpack/restapi:*
+        composer require --no-interaction --no-progress flowpack/rest-api:*
 
     - name: Run Unit tests
       run: | 
