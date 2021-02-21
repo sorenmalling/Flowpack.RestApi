@@ -27,16 +27,16 @@ jobs:
         working-directory: ${{ env.FLOW_FOLDER }}
 
     steps:
-    - name: Extract package name from repository
-      run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
-      shell: bash
-
     - name: Checkout Flow development distribution
       uses: actions/checkout@v2
       with:
         repository: neos/flow-development-distribution
         ref: ${{ matrix.flow-version }}
         path: ${{ env.FLOW_FOLDER }}
+
+    - name: Extract package name from repository
+      run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+      shell: bash
 
     - name: Checkout package
       uses: actions/checkout@v2
