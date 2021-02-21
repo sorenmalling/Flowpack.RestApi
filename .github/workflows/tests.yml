@@ -36,7 +36,6 @@ jobs:
 
     - name: Extract package name from repository
       run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
-      shell: bash
 
     - name: Checkout package
       uses: actions/checkout@v2
@@ -62,7 +61,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        git -C ../${{ env.PACKAGE_FOLDER}}/${$REPOSITORY_NAME} checkout -b build 
+        git -C ../${{ env.PACKAGE_FOLDER}}/${REPOSITORY_NAME} checkout -b build 
         composer require --no-update --no-interaction --no-progress ${{ github.repository }}:"dev-build as dev-master"
         composer ${{ matrix.dependencies == 'locked' && 'install' || 'update' }} --no-interaction --no-progress ${{ matrix.dependencies == 'lowest' && '--prefer-lowest' || '' }} ${{ matrix.composer-arguments }}
 
