@@ -70,13 +70,13 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 	 */
 	public function routerCorrectlyResolvesIndexAction()
 	{
-		$uri = $this->router->resolve([
+		$uri = $this->router->resolve(new ResolveContext(new \GuzzleHttp\Psr7\Uri('http://localhost'), [
 			'@package' => 'Flowpack.RestApi',
 			'@subpackage' => 'Tests\Functional\Api\Fixtures',
 			'@controller' => 'Aggregate',
 			'@action' => 'index',
 			'@format' => 'json'
-		]);
+		]));
 		self::assertSame($this->uriFor('aggregate', false), $uri, $uri);
 	}
 
@@ -393,7 +393,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		self::assertThat($results[0]['title'], self::identicalTo('Foo'));
 		self::assertThat($results[1]['title'], self::identicalTo('Bar'));
 
-		$links = new LinkHeader($response->getHeader('Link'));
+		$links = new LinkHeader($response->getHeaderLine('Link'));
 		$next = $links->getNext();
 		self::assertNotNull($next);
 
@@ -418,7 +418,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 
 		$response = $this->browser->request($this->uriFor('aggregate?limit=2&cursor=title'), 'GET');
 
-		$links = new LinkHeader($response->getHeader('Link'));
+		$links = new LinkHeader($response->getHeaderLine('Link'));
 		self::assertNotNull($links->getPrev());
 		$next = $links->getNext();
 		self::assertNotNull($next);
@@ -733,7 +733,6 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$response = $this->browser->request($this->uriFor('aggregate/12345678'), 'GET');
 		self::assertSame(404, $response->getStatusCode());
 		self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
-		self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
 
 		$error = json_decode($response->getBody()->getContents(), true);
 		self::assertTrue(isset($error['code']), 'Error code is not set');
@@ -749,7 +748,6 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$response = $this->createResource(['nonExistingProperty' => 'Foo Bar!']);
 		self::assertSame(500, $response->getStatusCode());
 		self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
-		self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
 
 		$error = json_decode($response->getBody()->getContents(), true);
 		self::assertTrue(isset($error['code']), 'Error code is not set');
@@ -765,7 +763,6 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$response = $this->createResource(['email' => 'Foo Bar!']);
 		self::assertSame(422, $response->getStatusCode());
 		self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
-		self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
 
 		$error = json_decode($response->getBody()->getContents(), true);
 		self::assertTrue(isset($error['message']), 'Error message is not set');
@@ -780,7 +777,6 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$response = $this->browser->request($this->uriFor('aggregate/exceptional'), 'GET');
 		self::assertSame(9001, $response->getStatusCode());
 		self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
-		self::assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
 
 		$error = json_decode($response->getBody()->getContents(), true);
 		self::assertTrue(isset($error['code']), 'Error code is not set');
