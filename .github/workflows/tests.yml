@@ -61,6 +61,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        ls -la ./DistributionPackages
         git -C ../${{ env.PACKAGE_FOLDER}}/${REPOSITORY_NAME} checkout -b build 
         composer require --no-update --no-interaction --no-progress ${{ github.repository }}:"dev-build as dev-master"
         composer ${{ matrix.dependencies == 'locked' && 'install' || 'update' }} --no-interaction --no-progress ${{ matrix.dependencies == 'lowest' && '--prefer-lowest' || '' }} ${{ matrix.composer-arguments }}
