@@ -10,7 +10,7 @@ jobs:
   build:
     env:
       FLOW_CONTEXT: Testing
-      FLOW_FOLDER: ../flow-base-distribution
+      FLOW_FOLDER: flow-base-distribution
 
     runs-on: ubuntu-latest
     name: PHP ${{ matrix.php-versions }} | Flow ${{ matrix.flow-versions }}
