@@ -77,7 +77,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 			'@controller' => 'Aggregate',
 			'@action' => 'index',
 			'@format' => 'json'
-		]), true);
+		], true));
 		self::assertSame($this->uriFor('aggregate', false), $uri, $uri);
 	}
 
