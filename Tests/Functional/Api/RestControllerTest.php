@@ -3,7 +3,7 @@ namespace Flowpack\RestApi\Tests\Functional\Api;
 
 use Flowpack\RestApi\Utility\LinkHeader;
 use Neos\Flow\Mvc\Routing\Route;
-use Neos\Flow\Mvc\Routing\Dto;
+use Neos\Flow\Mvc\Routing\Dto\ResolveContext;
 use Psr\Http\Message\ResponseInterface;
 
 class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
@@ -56,7 +56,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 	protected function get(string $uri): array
 	{
 		$response = $this->browser->request($uri, 'GET');
-		self::assertSame(200, $response->getStatusCode());
+		self::assertSame(200, $response->getStatusCode(), $uri . ' expected to return 200 OK');
 		$body = $response->getBody()->getContents();
 		self::assertNotEmpty($body);
 		$parsedBody = json_decode($body, true);
@@ -231,7 +231,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		self::assertSame(200, $response->getStatusCode(), $resourceUri . ' expected to return 200 OK');
 		self::assertEmpty($response->getBody()->getContents());
 
-		$resource = $this->get($response->getHeaderLine('Location'));
+		$resource = $this->get($resourceUri);
 		self::assertSame('Bar', $resource['title']);
 	}
 
@@ -397,7 +397,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		self::assertNotEmpty($response->getHeaderLine('Link'), json_encode($response->getHeaders()));
 		$links = new LinkHeader($response->getHeaderLine('Link'));
 		$next = $links->getNext();
-		self::assertNotNull($next);
+		self::assertNotNull($next, 'Link for next expected to be set in "' . $response->getHeaderLine('Link') . '"');
 
 		$results = $this->get($next);
 		self::assertThat(count($results), self::identicalTo(1));
@@ -423,7 +423,7 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 		$links = new LinkHeader($response->getHeaderLine('Link'));
 		self::assertNotNull($links->getPrev());
 		$next = $links->getNext();
-		self::assertNotNull($next);
+		self::assertNotNull($next, 'Link for next expected to be set in "' . $response->getHeaderLine('Link') . '"');
 
 		$results = $this->get($next);
 		self::assertThat(count($results), self::identicalTo(1));
