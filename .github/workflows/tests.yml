@@ -71,6 +71,24 @@ jobs:
     - name: Set Flow Context
       run: echo "FLOW_CONTEXT=${{ env.FLOW_CONTEXT }}" >> $GITHUB_ENV
 
+    - name: Setup Flow configuration
+      run: |
+        rm -f Configuration/Routes.yaml
+        cat <<EOF >> Configuration/Testing/Settings.yaml
+        Neos:
+          Flow:
+            persistence:
+              backendOptions:
+                host: '127.0.0.1'
+                driver: pdo_mysql
+                user: 'neos'
+                password: 'neos'
+                dbname: 'flow_functional_testing'
+            mvc:
+              routes:
+                'Neos.Flow': TRUE
+        EOF
+
     - name: Run Unit tests
       run: | 
         bin/phpunit --colors -c Build/BuildEssentials/PhpUnit/UnitTests.xml Packages/Application/${REPOSITORY_NAME}/Tests/Unit
