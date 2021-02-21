@@ -86,7 +86,11 @@ jobs:
                 dbname: 'flow_functional_testing'
             mvc:
               routes:
-                'Neos.Flow': TRUE
+                'Neos.Flow': FALSE
+                'Neos.Welcome': FALSE
+        Flowpack:
+          RestApi:
+            normalizeResourceTypes: false
         EOF
 
     - name: Run Unit tests
