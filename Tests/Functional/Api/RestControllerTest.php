@@ -71,14 +71,14 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 	 */
 	public function routerCorrectlyResolvesIndexAction()
 	{
-		$uri = $this->router->resolve(new ResolveContext(new \GuzzleHttp\Psr7\Uri('http://localhost'), [
+		$uri = (string)$this->router->resolve(new ResolveContext(new \GuzzleHttp\Psr7\Uri('http://localhost'), [
 			'@package' => 'Flowpack.RestApi',
 			'@subpackage' => 'Tests\Functional\Api\Fixtures',
 			'@controller' => 'Aggregate',
 			'@action' => 'index',
 			'@format' => 'json'
 		], true));
-		self::assertSame($this->uriFor('aggregate', false), $uri, $uri);
+		self::assertSame($this->uriFor('aggregate', true), $uri);
 	}
 
 	/**
