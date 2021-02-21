@@ -10,6 +10,7 @@ jobs:
   build:
     env:
       FLOW_CONTEXT: Testing
+      PACKAGE_FOLDER: flow-base-distribution/DistributionPackages/
       FLOW_FOLDER: flow-base-distribution
 
     runs-on: ubuntu-latest
@@ -26,8 +27,9 @@ jobs:
         working-directory: ${{ env.FLOW_FOLDER }}
 
     steps:
-    - name: Checkout package
-      uses: actions/checkout@v2
+    - name: Extract package name from repository
+      run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+      shell: bash
 
     - name: Checkout Flow development distribution
       uses: actions/checkout@v2
@@ -36,9 +38,10 @@ jobs:
         ref: ${{ matrix.flow-version }}
         path: ${{ env.FLOW_FOLDER }}
 
-    - name: Extract package name from repository
-      run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
-      shell: bash
+    - name: Checkout package
+      uses: actions/checkout@v2
+      with:
+        path: ${{ env.PACKAGE_FOLDER}}/${$REPOSITORY_NAME}
 
     - name: Setup PHP, with composer and extensions
       uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
@@ -46,11 +49,6 @@ jobs:
         php-version: ${{ matrix.php-versions }}
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql
         coverage: xdebug #optional
-
-    - name: Update Composer
-      run: |
-        composer self-update
-        composer --version
 
     - name: Get composer cache directory
       id: composer-cache
@@ -64,9 +62,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        git -C ../${REPOSITORY_NAME} checkout -b build 
-        composer config repositories.package '{ "type": "path", "url": "../${REPOSITORY_NAME}", "options": { "symlink": false } }'
-        composer config minimum-stability dev
+        git -C ../${{ env.PACKAGE_FOLDER}}/${$REPOSITORY_NAME} checkout -b build 
         composer require --no-update --no-interaction --no-progress ${{ github.repository }}:"dev-build as dev-master"
         composer ${{ matrix.dependencies == 'locked' && 'install' || 'update' }} --no-interaction --no-progress ${{ matrix.dependencies == 'lowest' && '--prefer-lowest' || '' }} ${{ matrix.composer-arguments }}
 
