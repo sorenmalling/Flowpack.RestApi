@@ -88,9 +88,6 @@ jobs:
               routes:
                 'Neos.Flow': FALSE
                 'Neos.Welcome': FALSE
-        Flowpack:
-          RestApi:
-            normalizeResourceTypes: false
         EOF
 
     - name: Run Unit tests
