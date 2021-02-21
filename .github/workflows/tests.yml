@@ -40,7 +40,7 @@ jobs:
     - name: Checkout package
       uses: actions/checkout@v2
       with:
-        path: ${{ env.PACKAGE_FOLDER}}/${REPOSITORY_NAME}
+        path: ${{ env.PACKAGE_FOLDER}}/${{ env.REPOSITORY_NAME }}
 
     - name: Setup PHP, with composer and extensions
       uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
@@ -62,7 +62,7 @@ jobs:
     - name: Install dependencies
       run: |
         ls -la ./DistributionPackages
-        git -C ../${{ env.PACKAGE_FOLDER}}/${REPOSITORY_NAME} checkout -b build 
+        git -C ../${{ env.PACKAGE_FOLDER}}/${{ env.REPOSITORY_NAME }} checkout -b build 
         composer require --no-update --no-interaction --no-progress ${{ github.repository }}:"dev-build as dev-master"
         composer ${{ matrix.dependencies == 'locked' && 'install' || 'update' }} --no-interaction --no-progress ${{ matrix.dependencies == 'lowest' && '--prefer-lowest' || '' }} ${{ matrix.composer-arguments }}
 
