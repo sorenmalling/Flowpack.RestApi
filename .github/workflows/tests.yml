@@ -31,7 +31,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: neos/flow-development-distribution
-        ref: ${{ matrix.flow-version }}
+        ref: ${{ matrix.flow-versions }}
         path: ${{ env.FLOW_FOLDER }}
 
     - name: Extract package name from repository
