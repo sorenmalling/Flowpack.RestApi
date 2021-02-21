@@ -19,9 +19,22 @@ jobs:
       matrix:
         php-versions: ['7.3', '7.4']
         flow-versions: ['6.3']
+        dependencies: ['highest']
+
+    defaults:
+      run:
+        working-directory: ${{ env.FLOW_FOLDER }}
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout package
+      uses: actions/checkout@v2
+
+    - name: Checkout Flow development distribution
+      uses: actions/checkout@v2
+      with:
+        repository: neos/flow-development-distribution
+        ref: ${{ matrix.flow-version }}
+        path: ${{ env.FLOW_FOLDER }}
 
     - name: Extract package name from repository
       run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
@@ -46,28 +59,24 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.composer-cache.outputs.dir }}
-        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
-        restore-keys: ${{ runner.os }}-composer-
+        key: ${{ runner.os }}-php${{ matrix.php-versions }}-composer-${{ hashFiles('**/composer.json') }}
+        restore-keys: ${{ runner.os }}-php${{ matrix.php-versions }}-composer-
 
-    - name: Prepare Flow distribution
+    - name: Install dependencies
       run: |
-        git clone https://github.com/neos/flow-base-distribution.git -b ${{ matrix.flow-versions }} ${FLOW_FOLDER}
-        cd ${FLOW_FOLDER}
-        composer update --prefer-dist --no-interaction --no-progress
-
-    - name: Install package
-      run: |
-        cd ${FLOW_FOLDER} 
-        composer config repositories.restapi path ../${REPOSITORY_NAME}
+        git -C ../${REPOSITORY_NAME} checkout -b build 
+        composer config repositories.package '{ "type": "path", "url": "../${REPOSITORY_NAME}", "options": { "symlink": false } }'
         composer config minimum-stability dev
-        composer require --no-interaction --no-progress flowpack/rest-api:*
+        composer require --no-update --no-interaction --no-progress ${{ github.repository }}:"dev-build as dev-master"
+        composer ${{ matrix.dependencies == 'locked' && 'install' || 'update' }} --no-interaction --no-progress ${{ matrix.dependencies == 'lowest' && '--prefer-lowest' || '' }} ${{ matrix.composer-arguments }}
+
+    - name: Set Flow Context
+      run: echo "FLOW_CONTEXT=${{ env.FLOW_CONTEXT }}" >> $GITHUB_ENV
 
     - name: Run Unit tests
       run: | 
-        cd ${FLOW_FOLDER} 
         bin/phpunit --colors -c Build/BuildEssentials/PhpUnit/UnitTests.xml Packages/Application/${REPOSITORY_NAME}/Tests/Unit
-      
+
     - name: Run Functional tests
       run: |
-        cd ${FLOW_FOLDER} 
         bin/phpunit --colors -c Build/BuildEssentials/PhpUnit/FunctionalTests.xml Packages/Application/${REPOSITORY_NAME}/Tests/Functional/*
