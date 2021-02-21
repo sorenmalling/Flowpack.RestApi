@@ -10,7 +10,7 @@ jobs:
   build:
     env:
       FLOW_CONTEXT: Testing
-      PACKAGE_FOLDER: flow-base-distribution/DistributionPackages/
+      PACKAGE_FOLDER: flow-base-distribution/DistributionPackages
       FLOW_FOLDER: flow-base-distribution
 
     runs-on: ubuntu-latest
