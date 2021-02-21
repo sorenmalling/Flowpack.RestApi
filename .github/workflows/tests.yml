@@ -79,8 +79,8 @@ jobs:
           Flow:
             persistence:
               backendOptions:
-                host: '127.0.0.1'
-                driver: pdo_mysql
+                driver: pdo_sqlite
+                memory: true
                 user: 'neos'
                 password: 'neos'
                 dbname: 'flow_functional_testing'
