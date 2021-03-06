@@ -175,6 +175,17 @@ class ViewConfigurationHelperTest extends \Neos\Flow\Tests\UnitTestCase
 		];
 	}
 
+	protected static function assertArrayEquals(array $expected, array $actual) {
+		self::assertEquals([], array_diff_key($actual, $expected));
+		foreach ($expected as $key => $value) {
+			if (is_array($value)) {
+				self::assertArrayEquals($value, $actual[$key]);
+			} else {
+				self::assertContains($value, $actual);
+			}
+		}
+	}
+
 	/**
 	 * @test
 	 * @dataProvider aggregateSchemasInput
@@ -184,6 +195,6 @@ class ViewConfigurationHelperTest extends \Neos\Flow\Tests\UnitTestCase
 	public function convertAggregateSchemaToViewConfigurationWorksAsExpected($input, $expected)
 	{
 		$output = $this->helper->convertAggregateSchemaToViewConfiguration($input);
-		self::assertThat($output, self::identicalTo($expected));
+		self::assertArrayEquals($expected, $output);
 	}
 }

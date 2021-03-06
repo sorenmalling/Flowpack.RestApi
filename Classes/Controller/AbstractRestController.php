@@ -825,7 +825,7 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 			$linkHeaders[] = sprintf('<%s>; rel="prev"', $prevPageUri);
 		}
 
-		$this->response->setComponentParameter(SetHeaderComponent::class, 'Link', implode(';', $linkHeaders));
+		$this->response->setComponentParameter(SetHeaderComponent::class, 'Link', implode(',', $linkHeaders));
 
 		$this->view->assign('values', $values);
 		$this->setCollectionReturnValue();
