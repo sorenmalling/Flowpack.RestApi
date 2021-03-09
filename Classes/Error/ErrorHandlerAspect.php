@@ -5,11 +5,10 @@ use Flowpack\RestApi\Controller\AbstractRestController;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Aop\JoinPointInterface;
 use Neos\Flow\Core\Bootstrap;
-use Neos\Flow\Http\Component\SetHeaderComponent;
-use Neos\Flow\Log\PsrSystemLoggerInterface;
 use Neos\Flow\Mvc\ActionRequest;
 use Neos\Flow\Exception as FlowException;
 use Neos\Flow\Mvc\ActionResponse;
+use Psr\Log\LoggerInterface;
 
 /**
  * A flow AOP aspect that registers the JsonExceptionHandler if an RestController is targeted.
@@ -22,7 +21,7 @@ class ErrorHandlerAspect
 
 	/**
 	 * @Flow\Inject
-	 * @var PsrSystemLoggerInterface
+	 * @var LoggerInterface
 	 */
 	protected $systemLogger;
 
@@ -65,7 +64,7 @@ class ErrorHandlerAspect
 					$statusCode = ($e instanceof FlowException) ? $e->getStatusCode() : 500;
 					$referenceCode = ($e instanceof FlowException) ? $e->getReferenceCode() : null;
 					$response->setStatusCode($statusCode);
-					$response->setComponentParameter(SetHeaderComponent::class, 'Content-Type', 'application/json');
+					$response->setContentType('application/json');
 					$response->setContent(json_encode(array('code' => $e->getCode(), 'message' => $e->getMessage(), 'reference' => $referenceCode), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 				}
 				return;
