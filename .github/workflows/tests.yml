@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         php-versions: ['7.3', '7.4']
-        flow-versions: ['6.3']
+        flow-versions: ['7.0']
         dependencies: ['highest']
 
     defaults:
