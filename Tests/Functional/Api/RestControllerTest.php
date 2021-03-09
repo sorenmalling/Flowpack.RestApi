@@ -2,6 +2,7 @@
 namespace Flowpack\RestApi\Tests\Functional\Api;
 
 use Flowpack\RestApi\Utility\LinkHeader;
+use Neos\Flow\Mvc\Routing\Dto\RouteParameters;
 use Neos\Flow\Mvc\Routing\Route;
 use Neos\Flow\Mvc\Routing\Dto\ResolveContext;
 use Psr\Http\Message\ResponseInterface;
@@ -71,13 +72,21 @@ class RestControllerTest extends \Neos\Flow\Tests\FunctionalTestCase
 	 */
 	public function routerCorrectlyResolvesIndexAction()
 	{
-		$uri = (string)$this->router->resolve(new ResolveContext(new \GuzzleHttp\Psr7\Uri('http://localhost'), [
-			'@package' => 'Flowpack.RestApi',
-			'@subpackage' => 'Tests\Functional\Api\Fixtures',
-			'@controller' => 'Aggregate',
-			'@action' => 'index',
-			'@format' => 'json'
-		], true));
+		$uri = (string)$this->router->resolve(
+			new ResolveContext(
+				new \GuzzleHttp\Psr7\Uri('http://localhost'),
+				[
+					'@package' => 'Flowpack.RestApi',
+					'@subpackage' => 'Tests\Functional\Api\Fixtures',
+					'@controller' => 'Aggregate',
+					'@action' => 'index',
+					'@format' => 'json'
+				],
+				true,
+				'',
+				RouteParameters::createEmpty()
+			)
+		);
 		self::assertSame($this->uriFor('aggregate', true), $uri);
 	}
 

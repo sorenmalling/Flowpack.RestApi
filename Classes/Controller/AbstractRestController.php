@@ -2,6 +2,7 @@
 namespace Flowpack\RestApi\Controller;
 
 use Doctrine\Inflector\Inflector;
+use Doctrine\Inflector\InflectorFactory;
 use Flowpack\RestApi\Domain\Repository\ResourceRepository;
 
 use Flowpack\RestApi\Utility\AggregateReflectionHelper;
@@ -254,7 +255,8 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 		];
 		$result['createAction'][static::$RESOURCE_ARGUMENT_NAME]['optional'] = true;
 
-		static::$RESOURCES_ARGUMENT_NAME = Inflector::pluralize(static::$RESOURCE_ARGUMENT_NAME);
+		$inflector = InflectorFactory::create()->build();
+		static::$RESOURCES_ARGUMENT_NAME = $inflector->pluralize(static::$RESOURCE_ARGUMENT_NAME);
 		$result['createAction'][static::$RESOURCES_ARGUMENT_NAME] = [
 			'position' => 1,
 			'optional' => true,
@@ -334,7 +336,8 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	 */
 	public static function getResourcesArgumentName()
 	{
-		return Inflector::pluralize(static::$RESOURCE_ARGUMENT_NAME);
+		$inflector = InflectorFactory::create()->build();
+		return $inflector->pluralize(static::$RESOURCE_ARGUMENT_NAME);
 	}
 
 	/**
