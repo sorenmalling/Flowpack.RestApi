@@ -46,7 +46,7 @@ abstract class AbstractEntryController extends \Neos\Flow\Mvc\Controller\ActionC
 
 	protected function initializeAction()
 	{
-	    $this->response->setHttpHeader('Access-Control-Allow-Origin', '*');
+        $this->response->setHttpHeader('Access-Control-Allow-Origin', '*');
         $this->response->setHttpHeader('X-API-Version', static::$REST_API_VERSION);
 	}
 

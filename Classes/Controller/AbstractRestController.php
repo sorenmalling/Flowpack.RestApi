@@ -324,8 +324,8 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 	protected function initializeAction()
 	{
 		$this->repository = new ResourceRepository(static::$RESOURCE_ENTITY_CLASS);
-        $this->response->setHttpHeader('Access-Control-Allow-Origin', '*');
-        $this->response->setHttpHeader('Content-Security-Policy', 'default-src \'none\'; frame-ancestors \'none\'');
+		$this->response->setHttpHeader('Access-Control-Allow-Origin', '*');
+		$this->response->setHttpHeader('Content-Security-Policy', 'default-src \'none\'; frame-ancestors \'none\'');
 	}
 
 	/**
@@ -481,9 +481,9 @@ abstract class AbstractRestController extends \Neos\Flow\Mvc\Controller\ActionCo
 
 	protected function initializeOptionsAction()
 	{
-        $this->response->setHttpHeader('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE, OPTIONS');
-        $this->response->setHttpHeader('Access-Control-Allow-Headers', $this->request->getHttpRequest()->getHeader('Access-Control-Request-Headers'));
-        $this->response->setHttpHeader('Access-Control-Max-Age', 3600);
+		$this->response->setHttpHeader('Access-Control-Allow-Methods', 'HEAD, GET, POST, PUT, PATCH, DELETE, OPTIONS');
+		$this->response->setHttpHeader('Access-Control-Allow-Headers', $this->request->getHttpRequest()->getHeader('Access-Control-Request-Headers'));
+		$this->response->setHttpHeader('Access-Control-Max-Age', 3600);
 	}
 
 	/**
