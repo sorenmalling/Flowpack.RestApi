@@ -2,6 +2,12 @@
 
 A base for implementing RESTful APIs in Neos.Flow Framework
 
+## Supported Flow versions
+
+The `master` branch targets `Flow >= 7.*`
+
+The `1.0` branch targets `Flow < 7.*`
+
 ## Credits!
 
 Credit to @albe for his https://github.com/trackmyrace/Trackmyrace.Core.Api repository!
