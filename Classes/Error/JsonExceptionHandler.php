@@ -5,7 +5,6 @@ use Neos\Flow\Error\ProductionExceptionHandler;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Exception as FlowException;
 use Neos\Flow\Http\Helper\ResponseInformationHelper;
-use Neos\Flow\Http\Response;
 
 /**
  * An exception handler that outputs exceptions as JSON objects

@@ -3,7 +3,6 @@ namespace Flowpack\RestApi\Controller;
 
 use Flowpack\RestApi\Utility\ResourceTypeHelper;
 use Neos\Flow\Annotations as Flow;
-use Neos\Flow\Http\Component\SetHeaderComponent;
 use Neos\Flow\Mvc\View\JsonView;
 use Neos\Flow\Reflection\ClassReflection;
 use Neos\Flow\Reflection\ReflectionService;
@@ -47,8 +46,8 @@ abstract class AbstractEntryController extends \Neos\Flow\Mvc\Controller\ActionC
 
 	protected function initializeAction()
 	{
-		$this->response->setComponentParameter(SetHeaderComponent::class, 'Access-Control-Allow-Origin', '*');
-		$this->response->setComponentParameter(SetHeaderComponent::class, 'X-API-Version', static::$REST_API_VERSION);
+        $this->response->setHttpHeader('Access-Control-Allow-Origin', '*');
+        $this->response->setHttpHeader('X-API-Version', static::$REST_API_VERSION);
 	}
 
 	/**

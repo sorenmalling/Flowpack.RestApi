@@ -2,13 +2,14 @@
 namespace Flowpack\RestApi\Routing;
 
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Mvc\Routing\DynamicRoutePart;
 
 /**
  * Regex Route Part handler that matches a route part against a regular expression.
  *
  * This class can be removed from core once it is part of Flow Framework.
  */
-class RegexRoutePart extends \Neos\Flow\Mvc\Routing\DynamicRoutePart
+class RegexRoutePart extends DynamicRoutePart
 {
 
 	/**
